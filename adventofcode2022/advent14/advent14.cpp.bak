@@ -1,0 +1,289 @@
+#include "advent14.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY14DBG 1
+#ifdef NDEBUG
+#define DAY14DBG 0
+#else
+#define DAY14DBG ENABLE_DAY14DBG
+#endif
+
+#if DAY14DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY14DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <unordered_map>
+#include <map>
+#include <string>
+#include <string_view>
+#include <algorithm>
+#include <tuple>
+
+#include <combine_maps.h>
+#include <parse_utils.h>
+#include <istream_line_iterator.h>
+#include <int_range.h>
+
+namespace
+{
+	using Element = char;
+	constexpr Element NULL_ELEMENT = '\0';
+	using Histogram = std::unordered_map<Element, int64_t>;
+
+	Histogram add_element(Histogram histogram, Element e)
+	{
+		++histogram[e];
+		return histogram;
+	}
+
+	Histogram make_histogram(std::string_view input)
+	{
+		return std::accumulate(begin(input), end(input), Histogram{}, add_element);
+	}
+
+	Histogram combine_histograms(Histogram a, Histogram b)
+	{
+		return utils::combine_maps(std::move(a), std::move(b), std::plus<int64_t >{});
+	}
+
+	using RuleInput = std::pair<Element, Element>;
+	using RuleSet = std::map<RuleInput, Element>;
+
+	using Rule = RuleSet::value_type;
+
+	RuleSet add_rule(RuleSet rules, RuleInput in, Element out) // RukeHokeyCokey shake_it_all_about
+	{
+		AdventCheck(!rules.contains(in));
+		rules[in] = out;
+		return rules;
+	}
+
+	RuleSet add_rule(RuleSet rules, Element left, Element right, Element out)
+	{
+		return add_rule(std::move(rules), std::pair{ left,right }, out);
+	}
+
+	RuleSet add_rule_from_str(RuleSet rules, std::string_view new_rule)
+	{
+		AdventCheck(utils::get_string_element(new_rule, 1) == "->");
+		
+		const auto [input, output] = utils::get_string_elements(new_rule, 0, 2);
+		AdventCheck(input.size() == 2);
+		AdventCheck(output.size() == 1);
+
+		const Element left = input[0];
+		const Element right = input[1];
+		const Element rule_output = output[0];
+		return add_rule(std::move(rules), left,right, rule_output);
+	}
+
+	Element get_new_element(const RuleSet& rules, Element left, Element right)
+	{
+		const auto rule_it = rules.find(std::pair{ left,right });
+		if (rule_it != end(rules))
+		{
+			return rule_it->second;
+		}
+		return NULL_ELEMENT;
+	}
+
+	using CacheIndex = std::tuple<Element, Element, int>;
+	using Cache = std::map<CacheIndex, Histogram>;
+
+	// Does not include histogram entries for original elements (i.e. the args)
+	Histogram get_additional_elements_impl(Element left, Element right, const RuleSet& rules, int num_steps, Cache& cache)
+	{
+		if (num_steps == 0)
+		{
+			return Histogram{};
+		}
+
+		const CacheIndex cache_index{ left,right,num_steps };
+		const auto cache_it = cache.find(cache_index);
+		if (cache_it != end(cache))
+		{
+			return cache_it->second;
+		}
+
+		Histogram result;
+
+		const Element new_element = get_new_element(rules, left, right);
+		if (new_element == NULL_ELEMENT)
+		{
+			return result;
+		}
+
+		const auto next_step = [&rules, num_steps, &cache](Element left, Element right)
+		{
+			return get_additional_elements_impl(left, right, rules, num_steps - 1, cache);
+		};
+
+		result = add_element(std::move(result), new_element);
+		result = combine_histograms(std::move(result), next_step(left,new_element));
+		result = combine_histograms(std::move(result), next_step(new_element, right));
+		cache.insert(std::pair{ cache_index,result });
+		return result;
+	}
+
+	Histogram get_additional_elements(Element left, Element right, const RuleSet& rules, int num_steps)
+	{
+		Cache cache;
+		return get_additional_elements_impl(left, right, rules, num_steps, cache);
+	}
+
+	Histogram simulate_n_steps(std::string_view input, const RuleSet& rules, int num_steps)
+	{
+		Histogram result = make_histogram(input);
+		if (input.empty()) return result;
+
+		for (std::size_t i : utils::int_range{ input.size() - 1 })
+		{
+			const Element left = input[i];
+			const Element right = input[i + 1];
+			Histogram subs = get_additional_elements(left, right, rules, num_steps);
+			result = combine_histograms(std::move(result), std::move(subs));
+		}
+		return result;
+	}
+
+	RuleSet read_ruleset(std::istream& input)
+	{
+		using ILI = utils::istream_line_iterator;
+		return std::accumulate(ILI{ input }, ILI{}, RuleSet{}, add_rule_from_str);
+	}
+
+	std::pair<std::string, RuleSet> parse_input(std::istream& input)
+	{
+		std::pair<std::string, RuleSet> result;
+		std::getline(input, result.first);
+		AdventCheck(!result.first.empty());
+		std::string dummy;
+		std::getline(input, dummy); // Ignore the blank line.
+		AdventCheck(dummy.empty());
+		result.second = read_ruleset(input);
+		AdventCheck(!result.second.empty());
+		return result;
+	}
+
+	int64_t solve_generic(std::istream& input, int num_steps)
+	{
+		const auto [init, rules] = parse_input(input);
+		const Histogram end_state = simulate_n_steps(init, rules, num_steps);
+
+		using Item = Histogram::value_type;
+		const auto minmax = std::ranges::minmax_element(end_state, [](Item a, Item b)
+		{
+			return a.second < b.second;
+		});
+		return minmax.max->second - minmax.min->second;
+	}
+
+	int64_t solve_p1(std::istream& input)
+	{
+		return solve_generic(input, 10);
+	}
+}
+
+namespace
+{
+	int64_t solve_p2(std::istream& input)
+	{
+		return solve_generic(input, 40);
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{
+			R"(NNCB
+
+CH -> B
+HH -> N
+CB -> H
+NH -> C
+HB -> C
+HC -> B
+HN -> C
+NN -> C
+BH -> H
+NC -> B
+NB -> B
+BN -> B
+BB -> N
+BC -> B
+CC -> N
+CN -> C)"
+		};
+	}
+
+	int64_t count_target(std::istream& input, Element target, int num_steps)
+	{
+		const auto [init, rules] = parse_input(input);
+		const Histogram result = simulate_n_steps(init, rules, num_steps);
+		const auto result_it = result.find(target);
+		AdventCheck(result_it != end(result));
+		return result_it->second;
+	}
+
+	int64_t total_after_n_steps(std::istream& input, int num_steps)
+	{
+		const auto [init, rules] = parse_input(input);
+		const Histogram result = simulate_n_steps(init, rules, num_steps);
+		const int64_t ret = std::transform_reduce(begin(result), end(result), int64_t{ 0 }, std::plus<int64_t>{},
+			[](Histogram::value_type item)
+		{
+			return item.second;
+		});
+		return ret;
+	}
+}
+
+ResultType advent14_internal::count_target_a(char target, int num_steps)
+{
+	auto input = testcase_a();
+	return count_target(input, target, num_steps);
+}
+
+ResultType advent14_internal::total_after_n_steps_a(int  num_steps)
+{
+	auto input = testcase_a();
+	return total_after_n_steps(input, num_steps);
+}
+
+ResultType day_fourteen_p1_a()
+{
+	auto input = testcase_a();
+	return solve_p1(input);
+}
+
+ResultType day_fourteen_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType advent_fourteen_p1()
+{
+	auto input = advent::open_puzzle_input(14);
+	return solve_p1(input);
+}
+
+ResultType advent_fourteen_p2()
+{
+	auto input = advent::open_puzzle_input(14);
+	return solve_p2(input);
+}
+
+#undef DAY14DBG
+#undef ENABLE_DAY14DBG

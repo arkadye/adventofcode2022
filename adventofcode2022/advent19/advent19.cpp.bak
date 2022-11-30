@@ -1,0 +1,546 @@
+#include "advent19.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY19DBG 1
+#ifdef NDEBUG
+#define DAY19DBG 0
+#else
+#define DAY19DBG ENABLE_DAY19DBG
+#endif
+
+#if DAY19DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY19DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <vector>
+#include <algorithm>
+
+#include <parse_utils.h>
+#include <to_value.h>
+#include <range_contains.h>
+#include <int_range.h>
+#include <small_vector.h>
+
+namespace
+{
+	constexpr int SCANNER_RANGE = 1000;
+	constexpr int OVERLAPS_NEEDED = 12;
+	constexpr uint8_t NUM_ROTATIONS = 24;
+
+	enum class Axis : uint8_t
+	{
+		X = 0, Y = 1, Z = 2
+	};
+
+	class Direction
+	{
+		uint8_t data;
+	public:
+		bool get_positive() const
+		{
+			return data & 0b001;
+		}
+		void set_positive(bool is_positive)
+		{
+			data = data & 0b110;
+			data = data | (is_positive ? 0b001 : 0b000);
+		}
+		Axis get_axis() const
+		{
+			const uint8_t axis = data >> 1;
+			AdventCheck(axis < 3);
+			const Axis result = static_cast<Axis>(axis);
+			return result;
+		}
+		void set_axis(Axis axis)
+		{
+			data = data & 0b001;
+			uint8_t new_mask = static_cast<uint8_t>(axis);
+			new_mask = new_mask << 1;
+			data = data | new_mask;
+		}
+		Direction(Axis axis, bool is_positive)
+		{
+			set_axis(axis);
+			set_positive(is_positive);
+		}
+	};
+
+	class Rotation
+	{
+		// Bits:
+		// 0: Invert fwd axis
+		// 1: Invert up axis
+		// 2: Up axis (excludes fwd axis when resolving)
+		// 3-4: Fwd axis (values 0, 1, or 2)
+		uint8_t data = 0;
+		Direction get_up(Axis fwd_axis) const
+		{
+			const bool is_high = data & 0b00100;
+			const int val = static_cast<int>(fwd_axis) + (is_high ? 2 : 1);
+			const int axis_val = val % 3;
+			AdventCheck(utils::range_contains_exc(axis_val, 0, 3));
+			const Axis axis = static_cast<Axis>(axis_val);
+			const bool is_positive = data & 0b00010;
+			const Direction result{ axis, is_positive };
+			return result;
+		}
+		Direction get_right(Direction fwd_dir, Direction up_dir) const;
+		Direction get_right(Direction fwd_dir) const
+		{
+			const Axis fwd_axis = fwd_dir.get_axis();
+			const Direction up_dir = get_up(fwd_axis);
+			const Direction result = get_right(fwd_dir, up_dir);
+			return result;
+		}
+	public:
+		Rotation(uint8_t hash) : data{ hash } { AdventCheck(hash < NUM_ROTATIONS); }
+		void set(Direction fwd, Direction up)
+		{
+			AdventCheck(fwd.get_axis() != up.get_axis());
+			const uint8_t fwd_axis = static_cast<uint8_t>(fwd.get_axis()) << 3;
+			const uint8_t fwd_dir = fwd.get_positive() ? 0b00010 : 0;
+			const uint8_t up_axis = [f = fwd.get_axis(), u = up.get_axis()]()
+			{
+				const int fwd = static_cast<int>(f);
+				const int up = static_cast<int>(u);
+				int diff = up - fwd;
+				if (diff < 0) diff += 3;
+				AdventCheck(utils::range_contains_inc(diff, 1, 2));
+				switch (diff)
+				{
+				case 1:
+					return uint8_t{ 0b00000 };
+				case 2:
+					return uint8_t{ 0b00100 };
+				default:
+					break;
+				}
+				AdventUnreachable();
+				return uint8_t{ 0 };
+			}();
+			const uint8_t up_dir = up.get_positive() ? 0b00001 : 0;
+		}
+		void set(uint8_t hash) { data = hash; }
+		Direction get_forward() const
+		{
+			const uint8_t fwd_bits = data >> 3;
+			AdventCheck(utils::range_contains_exc<uint8_t>(fwd_bits, 0, 3));
+			const Axis fwd_axis = static_cast<Axis>(fwd_bits);
+			const bool is_positive = data & 0b00001;
+			const Direction result{ fwd_axis,is_positive };
+			return result;
+		}
+		Direction get_right() const
+		{
+			const Direction fwd = get_forward();
+			const Direction result = get_right(fwd);
+			return result;
+		}
+		Direction get_up() const
+		{
+			const Direction fwd_dir = get_forward();
+			const Axis fwd_axis = fwd_dir.get_axis();
+			const Direction result = get_up(fwd_axis);
+			return result;
+		}
+	};
+
+	// DEFAULT: +x is fwd and +z is up
+	class Vector3D
+	{
+	private:
+		std::array<int, 3> data;
+		int& get(Axis a) { return data[static_cast<std::underlying_type_t<Axis>>(a)]; }
+		int get(Axis a) const { return data[static_cast<std::underlying_type_t<Axis>>(a)]; }
+	public:
+		Vector3D(int x, int y, int z) : data{ x,y,z } {}
+		Vector3D() : Vector3D{ 0,0,0 } {}
+		int& operator[](Axis a) { return get(a); }
+		int operator[](Axis a) const { return get(a); }
+		int& x() { return get(Axis::X); }
+		int& y() { return get(Axis::Y); };
+		int& z() { return get(Axis::Z); }
+		int x() const { return get(Axis::X); }
+		int y() const { return get(Axis::Y); };
+		int z() const { return get(Axis::Z); }
+		auto cbegin() const { return data.cbegin(); }
+		auto cend() const { return data.cend(); }
+		auto begin() const { return cbegin(); }
+		auto end() const { return cend(); }
+		auto begin() { return data.begin(); }
+		auto end() { return data.end(); }
+		auto operator<=>(const Vector3D& other) const noexcept = default;
+		bool operator==(const Vector3D& other) const noexcept = default;
+		Vector3D& operator+=(const Vector3D& other)
+		{
+			std::transform(begin(), end(), other.begin(), begin(), std::plus<int>{});
+			return *this;
+		}
+		Vector3D& operator-=(const Vector3D& other)
+		{
+			std::transform(begin(), end(), other.begin(), begin(), std::minus<int>{});
+			return *this;
+		}
+		Vector3D& operator*=(Rotation rotation);
+		static Vector3D get_direction(Direction direction)
+		{
+			Vector3D result;
+			result[direction.get_axis()] = direction.get_positive() ? 1 : -1;
+			return result;
+		}
+		static Vector3D cross(const Vector3D& left, const Vector3D& right)
+		{
+			Vector3D result;
+			result.x() = left.y() * right.z() - left.z() * right.y();
+			result.y() = left.z() * right.x() - left.x() * right.z();
+			result.z() = left.x() * right.y() - left.y() * right.x();
+			return result;
+		}
+	};
+
+	Direction Rotation::get_right(Direction fwd_dir, Direction up_dir) const
+	{
+		const Vector3D fwd = Vector3D::get_direction(fwd_dir);
+		const Vector3D up = Vector3D::get_direction(up_dir);
+		const Vector3D right = Vector3D::cross(fwd, up);
+		const Axis axis = [&right]()
+		{
+			for (int i = 0; i < 3; ++i)
+			{
+				const Axis axis = static_cast<Axis>(i);
+				const int val = right[axis];
+				if (val != 0) return axis;
+			}
+			AdventUnreachable();
+			return Axis::X;
+		}();
+		const int axis_val = right[axis];
+		AdventCheck(axis_val != 0);
+		const bool is_positive = axis_val > 0;
+		return Direction{ axis,is_positive };
+	}
+
+	Vector3D operator*(const Vector3D& location, Rotation rotation)
+	{
+		Vector3D result;
+		auto set_val = [&result](int base_val, Direction dir)
+		{
+			const Axis axis = dir.get_axis();
+			const bool positive = dir.get_positive();
+			const int new_val = positive ? base_val : -base_val;
+			result[axis] = new_val;
+		};
+		set_val(location.x(), rotation.get_forward());
+		set_val(location.y(), rotation.get_right());
+		set_val(location.z(), rotation.get_up());
+		return result;
+	}
+
+	Vector3D& Vector3D::operator*=(Rotation rotation)
+	{
+		*this = *this * rotation;
+		return *this;
+	}
+
+	Vector3D get_location_from_str(std::string_view input)
+	{
+		auto read = [](std::string_view sv) {return utils::to_value<int>(sv); };
+		auto [x_str, y_str, z_str] = utils::get_string_elements(input, ',', 0, 1, 2);
+		const int x = read(x_str);
+		const int y = read(y_str);
+		const int z = read(z_str);
+		return Vector3D{ x,y,z };
+	}
+
+	Vector3D operator+(const Vector3D& left, const Vector3D& right)
+	{
+		Vector3D result{ left };
+		result += right;
+		return result;
+	}
+
+	Vector3D operator-(const Vector3D& left, const Vector3D& right)
+	{
+		Vector3D result{ left };
+		result -= right;
+		return result;
+	}
+
+	class Sensor
+	{
+		friend std::istream& operator>>(std::istream&, Sensor&);
+		int id = 0;
+		Vector3D location;
+		std::vector<Vector3D> beacons;
+		int count_beacons_impl(const Sensor& sensor) const
+		{
+			int result = 0;
+			for (std::size_t i : utils::int_range{ sensor.size() })
+			{
+				const Vector3D other_beacon = sensor[i];
+				const bool in_range = can_detect_at(other_beacon);
+				if (in_range) continue;
+				const bool overlaps = has_beacon_at(other_beacon);
+				if (overlaps)
+				{
+					++result;
+				}
+				else
+				{
+					return -1;
+				}
+			}
+			return result;
+		}
+	public:
+		std::size_t size() const { return beacons.size(); }
+		Vector3D operator[](std::size_t idx) const
+		{
+			AdventCheck(idx < size());
+			const Vector3D& beacon_loc = beacons[idx];
+			return location + beacon_loc;
+		}
+		bool can_detect_at(const Vector3D& other_location) const
+		{
+			auto in_range = [](int a, int b)
+			{
+				const int diff = std::abs(a - b);
+				return diff <= SCANNER_RANGE;
+			};
+			return std::transform_reduce(begin(location), end(location), begin(location), true, in_range, std::logical_and<bool>{});
+		}
+
+		bool has_beacon_at(const Vector3D& other_location) const
+		{
+			return std::binary_search(begin(beacons), end(beacons), other_location);
+		}
+
+		int count_overlapping_beacons(const Sensor& other) const
+		{
+			const int count = count_beacons_impl(other);
+			if (count < 0) return -1;
+			const int reciprocal = other.count_beacons_impl(*this);
+			if (reciprocal < 0) return -1;
+			AdventCheck(count == reciprocal);
+			return count;
+		}
+
+		void rotate(Rotation rotation)
+		{
+			for (Vector3D& beacon : beacons)
+			{
+				beacon *= rotation;
+			}
+			std::sort(begin(beacons),end(beacons));
+		}
+
+		std::vector<Vector3D> get_beacon_list() const
+		{
+			std::vector<Vector3D> result;
+			result.reserve(beacons.size());
+			std::ranges::transform(beacons, std::back_inserter(result),
+				[offset = location](const Vector3D& beacon)
+			{
+				return beacon + offset;
+			});
+			return result;
+		}
+
+		void set_location(const Vector3D& new_location)
+		{
+			location = new_location;
+		}
+	};
+
+	Sensor operator*(const Sensor& sensor, Rotation rotation)
+	{
+		Sensor result = sensor;
+		result.rotate(rotation);
+		return result;
+	}
+
+	std::istream& operator>>(std::istream& is, Sensor& sensor_out)
+	{
+		std::string line;
+
+		// Header
+		{
+			std::getline(is, line);
+#if DAY19DBG
+			const auto [idash, section, id_str, odash] = utils::get_string_elements(line, 0, 1, 2, 3);
+			AdventCheck(idash == "---");
+			AdventCheck(section == "scanner");
+			AdventCheck(utils::is_value(id_str));
+			AdventCheck(odash == "---");
+#else
+			const std::string_view id_str = utils::get_string_element(line, 2);
+#endif
+			sensor_out.id = utils::to_value<int>(id_str);
+		}
+
+		while(!is.eof() && !line.empty())
+		{
+			std::getline(is, line);
+			if (!line.empty())
+			{
+				const Vector3D beacon = get_location_from_str(line);
+				sensor_out.beacons.push_back(beacon);
+			}
+		}
+
+		std::sort(begin(sensor_out.beacons), end(sensor_out.beacons));
+
+		sensor_out.location = Vector3D{};
+		return is;
+	}
+
+	std::vector<Sensor> get_sensors(std::istream& input, std::size_t max_beacons)
+	{
+		std::vector<Sensor> result;
+		while (!input.eof() && result.size() < max_beacons)
+		{
+			Sensor sensor;
+			input >> sensor;
+			result.push_back(std::move(sensor));
+		}
+		return result;
+	}
+
+	std::vector<Vector3D> get_beacon_list(const std::vector<Sensor>& sensors)
+	{
+		auto transform = [](const Sensor& sensor)
+		{
+			return sensor.get_beacon_list();
+		};
+		auto reduce = [](std::vector<Vector3D> a, const std::vector<Vector3D>& b)
+		{
+			const std::size_t total_beacons = a.size() + b.size();
+			a.reserve(total_beacons);
+			std::ranges::copy(b, std::back_inserter(a));
+			return a;
+		};
+
+		std::vector<Vector3D> result = std::transform_reduce(begin(sensors), end(sensors), std::vector<Vector3D>{},
+			reduce, transform);
+		std::sort(begin(result), end(result));
+		const auto unique_result = std::unique(begin(result), end(result));
+		result.erase(unique_result, end(result));
+		return result;
+	}
+
+	std::vector<Sensor> place_sensors_recursively(const std::vector<Sensor>& sensors, const std::vector<Sensor>& partial_solution)
+	{
+		AdventCheck(!partial_solution.empty());
+		if (sensors.empty()) return partial_solution;
+
+		const std::vector<Vector3D> beacons = get_beacon_list(partial_solution);
+
+		// Try each unplaced sensor
+		for (std::size_t sensor_idx : utils::int_range{ sensors.size() })
+		{
+			const std::vector<Sensor> updated_sensors = [sensors, sensor_idx]()
+			{
+				std::vector<Sensor> result = sensors;
+				result.erase(begin(result) + sensor_idx);
+				return result;
+			}();
+			// Try each rotation
+			for (uint8_t rot_hash : utils::int_range{ uint8_t{NUM_ROTATIONS} })
+			{
+				const Rotation rotation{ rot_hash };
+				Sensor rotated = sensors[sensor_idx] * rotation;
+				for (const Vector3D& other_beacon : beacons)
+				{
+					for (std::size_t my_beacon_idx : utils::int_range{ rotated.size() })
+					{
+						rotated.set_location(Vector3D{ 0,0,0 });
+						const Vector3D my_beacon = rotated[my_beacon_idx];
+						const Vector3D my_new_location = other_beacon - my_beacon;
+						rotated.set_location(my_new_location);
+						const Vector3D new_beacon_location = rotated[my_beacon_idx];
+						AdventCheck(other_beacon == new_beacon_location);
+						bool confirmed = false;
+						for (const Sensor& other_sensor : partial_solution)
+						{
+							const int matching_beacons = rotated.count_overlapping_beacons(other_sensor);
+							if (matching_beacons >= OVERLAPS_NEEDED)
+							{
+								confirmed = true;
+							}
+							else if(matching_beacons < 0)
+							{
+								confirmed = false;
+								break;
+							}
+						} // for each placed sensor
+						if (confirmed)
+						{
+							std::vector<Sensor> test_solution = partial_solution;
+							test_solution.push_back(rotated);
+							const std::vector<Sensor> solution = place_sensors_recursively(updated_sensors, test_solution);
+							if (!solution.empty())
+							{
+								return solution;
+							}
+						}
+					} // for each of my beacons
+				} // for each other beacon
+			} // for each rotation
+		} // For each sensor
+		return std::vector<Sensor>{};
+	}
+
+	std::vector<Sensor> place_sensors(std::vector<Sensor> sensors)
+	{
+		std::vector<Sensor> result{ std::move(sensors.back()) };
+		sensors.pop_back();
+		result = place_sensors_recursively(sensors, result);
+		AdventCheck(!result.empty());
+		return result;
+	}
+
+	std::size_t solve_p1(std::istream& input, std::size_t max_num_beacons)
+	{
+		std::vector<Sensor> sensors = get_sensors(input, max_num_beacons);
+		sensors = place_sensors(std::move(sensors));
+		AdventCheck(!sensors.empty());
+		const std::vector<Vector3D> result = get_beacon_list(sensors);
+		return result.size();
+	}
+
+	int solve_p2(std::istream& input)
+	{
+		return 0;
+	}
+}
+
+ResultType day19_internal::day_nineteen_p1_generic(std::size_t num_beacons)
+{
+	auto input = advent::open_testcase_input(19, 'a');
+	return solve_p1(input, num_beacons);
+}
+
+ResultType advent_nineteen_p1()
+{
+	auto input = advent::open_puzzle_input(19);
+	return solve_p1(input, std::numeric_limits<std::size_t>::max());
+}
+
+ResultType advent_nineteen_p2()
+{
+	auto input = advent::open_puzzle_input(19);
+	return solve_p2(input);
+}
+
+#undef DAY19DBG
+#undef ENABLE_DAY19DBG

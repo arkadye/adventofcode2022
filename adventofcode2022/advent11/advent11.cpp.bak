@@ -1,0 +1,266 @@
+#include "advent11.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY11DBG 1
+#ifdef NDEBUG
+#define DAY11DBG 0
+#else
+#define DAY11DBG ENABLE_DAY11DBG
+#endif
+
+#if DAY11DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY11DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <array>
+#include <algorithm>
+#include <functional>
+
+#include <coords.h>
+#include <range_contains.h>
+#include <int_range.h>
+#include <istream_line_iterator.h>
+
+namespace
+{
+	template <uint8_t FLASH_THRESHOLD>
+	class Octopus
+	{
+	private:
+		uint8_t state;
+		constexpr uint8_t get_flashed_mask() const { return 0b10000000; }
+		constexpr uint8_t get_base() const { return get_flashed_mask() - FLASH_THRESHOLD; }
+
+	public:
+		explicit Octopus(int energy) : state{ static_cast<uint8_t>(get_base() + energy) }
+		{
+			AdventCheck(energy < static_cast<int>(FLASH_THRESHOLD));
+		}
+		explicit Octopus(char energy) : Octopus(int(energy - '0')) {}
+		Octopus() : Octopus{ 0 } {}
+		Octopus& operator=(const Octopus&) = default;
+
+		bool has_flashed() const
+		{
+			return get_flashed_mask() & state;
+		}
+		void reset()
+		{
+			if (has_flashed())
+			{
+				state = get_base();
+			}
+		}
+		int get_energy() const
+		{
+			return state - get_base();
+		}
+
+		bool tick()
+		{
+			const bool prev_flash = has_flashed();
+			++state;
+			return has_flashed() && !prev_flash;
+		}
+	};
+
+
+	template <uint8_t FLASH_VAL, int NUM_COLS, int NUM_ROWS>
+	class OctopusGridBase
+	{
+		using Vector3D = utils::coords;
+		using OctoType = Octopus<FLASH_VAL>;
+		std::array<OctoType, NUM_COLS* NUM_ROWS> data;
+		int count_flashes() const
+		{
+			return std::ranges::count_if(data, std::mem_fn(&OctoType::has_flashed));
+		}
+
+		void reset()
+		{
+			std::ranges::for_each(data, std::mem_fn(&OctoType::reset));
+		}
+
+		Vector3D to_coords(std::size_t idx) const
+		{
+			AdventCheck(idx < data.size());
+			Vector3D result;
+			result.x = idx % NUM_COLS;
+			result.y = idx / NUM_COLS;
+			return result;
+		}
+
+		static bool check_coords(const Vector3D& loc)
+		{
+			using utils::range_contains_exc;
+			return range_contains_exc(loc.x, 0, NUM_COLS) && range_contains_exc(loc.y, 0, NUM_ROWS);
+		}
+
+		std::size_t to_idx(const Vector3D& loc) const
+		{
+			AdventCheck(check_coords(loc));
+			const std::size_t result = loc.y * NUM_COLS + loc.x;
+			AdventCheck(result < data.size());
+			return result;
+		}
+
+		void tick(std::size_t idx)
+		{
+			AdventCheck(idx < data.size());
+			if (data[idx].tick())
+			{
+				const Vector3D loc = to_coords(idx);
+				std::ranges::for_each(loc.neighbours_plus_diag(),
+					[this](const Vector3D& l)
+				{
+					tick(l);
+				});
+			}
+		}
+
+		void tick(const Vector3D& loc)
+		{
+			if (check_coords(loc))
+			{
+				const std::size_t idx = to_idx(loc);
+				tick(idx);
+			}
+		}
+
+	public:
+		explicit OctopusGridBase(std::istream& input)
+		{
+			using ILI = utils::istream_line_iterator;
+			std::size_t num_lines = 0;
+			for (auto it = ILI{ input }; it != ILI{}; ++it)
+			{
+				const auto line = *it;
+				AdventCheck(line.size() == NUM_COLS);
+				const auto start_it = begin(data) + (num_lines * NUM_COLS);
+				++num_lines;
+				std::transform(begin(line), end(line), start_it, [](char c) {return OctoType{ c }; });
+			}
+			AdventCheck(num_lines == NUM_ROWS);
+		}
+
+		int size() const { return static_cast<int>(data.size()); }
+
+		int step()
+		{
+			const auto range = utils::int_range{ data.size() };
+			std::for_each(begin(range),end(range), [this](std::size_t idx) {tick(idx); });
+			const int result = count_flashes();
+			reset();
+			return result;
+		}
+
+		template <typename LOG>
+		void print(LOG& out) const
+		{
+			return;
+			for (auto c : utils::int_range{ NUM_COLS })
+			{
+				out << '\n';
+				for (auto r : utils::int_range{ NUM_ROWS })
+				{
+					const std::size_t idx = to_idx(Vector3D{ r,c });
+					out << data[idx].get_energy();
+				}
+			}
+			out << '\n';
+		}
+	};
+
+	using OctopusGrid = OctopusGridBase<10, 10, 10>;
+
+	int solve_p1_generic(std::istream& input, int num_steps)
+	{
+		OctopusGrid state{ input };
+		int result = 0;
+		//log << "\nBefore any step:";
+		state.print(log);
+		for (auto i : utils::int_range{ num_steps })
+		{
+			result += state.step();
+		//	log << "\nAfter step " << i+1 << ":";
+			state.print(log);
+		}
+		return result;
+
+	}
+
+	int solve_p1(std::istream& input)
+	{
+		return solve_p1_generic(input, 100);
+	}
+}
+
+namespace
+{
+	int solve_p2(std::istream& input)
+	{
+		OctopusGrid state{ input };
+		int steps = 0;
+		while (true)
+		{
+			++steps;
+			const int num_lights = state.step();
+			if (num_lights == state.size()) return steps;
+		}
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{
+			R"(5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526)"
+		};
+	}
+}
+
+ResultType advent8_internal::day_eleven_p1_testcase(int num_steps)
+{
+	auto input = testcase_a();
+	return solve_p1_generic(input, num_steps);
+}
+
+ResultType day_eleven_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType advent_eleven_p1()
+{
+	auto input = advent::open_puzzle_input(11);
+	return solve_p1(input);
+}
+
+ResultType advent_eleven_p2()
+{
+	auto input = advent::open_puzzle_input(11);
+	return solve_p2(input);
+}
+
+#undef DAY11DBG
+#undef ENABLE_DAY11DBG

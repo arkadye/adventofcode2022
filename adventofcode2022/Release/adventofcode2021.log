@@ -1,0 +1,8 @@
+﻿  advent8.cpp
+  advent_of_code_testcases.cpp
+  Generating code
+  420 of 6638 functions ( 6.3%) were compiled, the rest were copied from previous compilation.
+    265 functions were new in current compilation
+    373 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  adventofcode2021.vcxproj -> C:\Users\User\source\repos\adventofcode2021\Release\adventofcode2021.exe

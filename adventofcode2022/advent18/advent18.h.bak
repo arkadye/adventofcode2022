@@ -1,0 +1,36 @@
+#pragma once
+
+#include "../advent/advent_types.h"
+
+ResultType day_eighteen_p1_a();
+ResultType day_eighteen_p1_b();
+ResultType day_eighteen_p1_c();
+ResultType day_eighteen_p1_d();
+ResultType day_eighteen_p1_e();
+ResultType day_eighteen_p1_f();
+ResultType day_eighteen_p1_g();
+ResultType day_eighteen_p1_h();
+ResultType day_eighteen_p1_i();
+ResultType day_eighteen_p1_j();
+ResultType day_eighteen_p1_k();
+ResultType day_eighteen_p1_l();
+ResultType day_eighteen_p1_m();
+ResultType day_eighteen_p1_n();
+ResultType day_eighteen_p1_o();
+ResultType day_eighteen_p1_p();
+ResultType day_eighteen_p1_q();
+ResultType day_eighteen_p1_r();
+ResultType day_eighteen_p1_s();
+ResultType day_eighteen_p1_t();
+ResultType day_eighteen_p1_u();
+ResultType day_eighteen_p1_v();
+
+ResultType day_eighteen_p2_a();
+
+ResultType day_eighteen_split_test(int input);
+
+template <int INPUT>
+inline ResultType day_eighteen_split_test() { return day_eighteen_split_test(INPUT); }
+
+ResultType advent_eighteen_p1();
+ResultType advent_eighteen_p2();

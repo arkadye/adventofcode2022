@@ -1,0 +1,352 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|Win32">
+      <Configuration>Profile</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|x64">
+      <Configuration>Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="advent10\advent10.h" />
+    <ClInclude Include="advent11\advent11.h" />
+    <ClInclude Include="advent12\advent12.h" />
+    <ClInclude Include="advent13\advent13.h" />
+    <ClInclude Include="advent14\advent14.h" />
+    <ClInclude Include="advent15\advent15.h" />
+    <ClInclude Include="advent16\advent16.h" />
+    <ClInclude Include="advent17\advent17.h" />
+    <ClInclude Include="advent18\advent18.h" />
+    <ClInclude Include="advent19\advent19.h" />
+    <ClInclude Include="advent1\advent1.h" />
+    <ClInclude Include="advent20\advent20.h" />
+    <ClInclude Include="advent21\advent21.h" />
+    <ClInclude Include="advent22\advent22.h" />
+    <ClInclude Include="advent23\advent23.h" />
+    <ClInclude Include="advent24\advent24.h" />
+    <ClInclude Include="advent25\advent25.h" />
+    <ClInclude Include="advent2\advent2.h" />
+    <ClInclude Include="advent3\advent3.h" />
+    <ClInclude Include="advent4\advent4.h" />
+    <ClInclude Include="advent5\advent5.h" />
+    <ClInclude Include="advent6\advent6.h" />
+    <ClInclude Include="advent7\advent7.h" />
+    <ClInclude Include="advent8\advent8.h" />
+    <ClInclude Include="advent9\advent9.h" />
+    <ClInclude Include="advent\advent_headers.h" />
+    <ClInclude Include="advent\advent_of_code.h" />
+    <ClInclude Include="advent\advent_setup.h" />
+    <ClInclude Include="advent\advent_testcase_setup.h" />
+    <ClInclude Include="advent\advent_types.h" />
+    <ClInclude Include="advent\advent_utils.h" />
+    <ClInclude Include="utils\a_star.h" />
+    <ClInclude Include="utils\binary_find.h" />
+    <ClInclude Include="utils\brackets.h" />
+    <ClInclude Include="utils\combine_maps.h" />
+    <ClInclude Include="utils\conway_simulation.h" />
+    <ClInclude Include="utils\coords.h" />
+    <ClInclude Include="utils\erase_remove_if.h" />
+    <ClInclude Include="utils\index_iterator.h" />
+    <ClInclude Include="utils\index_iterator2.h" />
+    <ClInclude Include="utils\int_range.h" />
+    <ClInclude Include="utils\isqrt.h" />
+    <ClInclude Include="utils\istream_line_iterator.h" />
+    <ClInclude Include="utils\is_sorted.h" />
+    <ClInclude Include="utils\md5.h" />
+    <ClInclude Include="utils\min_transform.h" />
+    <ClInclude Include="utils\parse_utils.h" />
+    <ClInclude Include="utils\bit_ops.h" />
+    <ClInclude Include="utils\position3d.h" />
+    <ClInclude Include="utils\push_back_unique.h" />
+    <ClInclude Include="utils\range_contains.h" />
+    <ClInclude Include="utils\ring_buffer.h" />
+    <ClInclude Include="utils\shared_lock_guard.h" />
+    <ClInclude Include="utils\small_vector.h" />
+    <ClInclude Include="utils\sorted_vector.h" />
+    <ClInclude Include="utils\span.h" />
+    <ClInclude Include="utils\split_string.h" />
+    <ClInclude Include="utils\swap_remove.h" />
+    <ClInclude Include="utils\to_value.h" />
+    <ClInclude Include="utils\transform_if.h" />
+    <ClInclude Include="utils\trim_string.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="advent10\advent10.cpp" />
+    <ClCompile Include="advent11\advent11.cpp" />
+    <ClCompile Include="advent12\advent12.cpp" />
+    <ClCompile Include="advent13\advent13.cpp" />
+    <ClCompile Include="advent14\advent14.cpp" />
+    <ClCompile Include="advent15\advent15.cpp" />
+    <ClCompile Include="advent16\advent16.cpp" />
+    <ClCompile Include="advent17\advent17.cpp" />
+    <ClCompile Include="advent18\advent18.cpp" />
+    <ClCompile Include="advent19\advent19.cpp" />
+    <ClCompile Include="advent1\advent1.cpp" />
+    <ClCompile Include="advent20\advent20.cpp" />
+    <ClCompile Include="advent21\advent21.cpp" />
+    <ClCompile Include="advent22\advent22.cpp" />
+    <ClCompile Include="advent23\advent23.cpp" />
+    <ClCompile Include="advent24\advent24.cpp" />
+    <ClCompile Include="advent25\advent25.cpp" />
+    <ClCompile Include="advent2\advent2.cpp" />
+    <ClCompile Include="advent3\advent3.cpp" />
+    <ClCompile Include="advent4\advent4.cpp" />
+    <ClCompile Include="advent5\advent5.cpp" />
+    <ClCompile Include="advent6\advent6.cpp" />
+    <ClCompile Include="advent7\advent7.cpp" />
+    <ClCompile Include="advent8\advent8.cpp" />
+    <ClCompile Include="advent9\advent9.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\advent_of_code_testcases.cpp" />
+    <ClCompile Include="src\isqrt.cpp" />
+    <ClCompile Include="src\md5.cpp" />
+    <ClCompile Include="src\parse_utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="utils\aoc_utils.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="advent10\advent10.txt" />
+    <Text Include="advent11\advent11.txt" />
+    <Text Include="advent12\advent12.txt" />
+    <Text Include="advent13\advent13.txt" />
+    <Text Include="advent14\advent14.txt" />
+    <Text Include="advent15\advent15.txt" />
+    <Text Include="advent16\advent16.txt" />
+    <Text Include="advent17\advent17.txt" />
+    <Text Include="advent18\advent18.txt" />
+    <Text Include="advent19\advent19.txt" />
+    <Text Include="advent19\testcase_a.txt" />
+    <Text Include="advent1\advent1.txt" />
+    <Text Include="advent20\advent20.txt" />
+    <Text Include="advent21\advent21.txt" />
+    <Text Include="advent22\advent22.txt" />
+    <Text Include="advent23\advent23.txt" />
+    <Text Include="advent24\advent24.txt" />
+    <Text Include="advent25\advent25.txt" />
+    <Text Include="advent2\advent2.txt" />
+    <Text Include="advent3\advent3.txt" />
+    <Text Include="advent4\advent4.txt" />
+    <Text Include="advent5\advent5.txt" />
+    <Text Include="advent6\advent6.txt" />
+    <Text Include="advent7\advent7.txt" />
+    <Text Include="advent8\advent8.txt" />
+    <Text Include="advent9\advent9.txt" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{d9c43f0d-07e0-4bee-afe4-1d12be581171}</ProjectGuid>
+    <RootNamespace>adventofcode2022</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>adventofcode2022</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>ERRORCHECKS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>ERRORCHECKS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <ExceptionHandling>Sync</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>ERRORCHECKS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>ERRORCHECKS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

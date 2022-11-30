@@ -1,0 +1,332 @@
+#include "advent12.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY12DBG 1
+#ifdef NDEBUG
+#define DAY12DBG 0
+#else
+#define DAY12DBG ENABLE_DAY12DBG
+#endif
+
+#if DAY12DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY12DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <string>
+#include <string_view>
+#include <algorithm>
+
+#include <small_vector.h>
+#include <sorted_vector.h>
+#include <parse_utils.h>
+#include <istream_line_iterator.h>
+
+namespace
+{
+	constexpr std::string_view START = "start";
+	constexpr std::string_view FINISH = "end"; // Because 'end' has a particular meaning in C++.
+
+	enum class CaveType
+	{
+		start,
+		finish,
+		big,
+		small
+	};
+	
+	CaveType get_cave_type(std::string_view name)
+	{
+		AdventCheck(!name.empty());
+		if (name == START) return CaveType::start;
+		if (name == FINISH) return CaveType::finish;
+		if (std::isupper(name.front()))
+		{
+			AdventCheck(std::ranges::all_of(name, std::isupper));
+			return CaveType::big;
+		}
+		else
+		{
+			AdventCheck(std::ranges::all_of(name, std::islower));
+			return CaveType::small;
+		}
+		AdventUnreachable();
+	}
+
+	struct Cave
+	{
+		std::string name;
+		utils::small_vector<std::string, 3> connections;
+		Cave(std::string n) : name{ std::move(n) } {}
+	};
+
+	auto operator<=>(const Cave& left, const Cave& right)
+	{
+		return left.name <=> right.name;
+	}
+
+	using CaveStore = utils::sorted_vector<Cave>;
+
+	void add_connection(CaveStore& store, std::string start, std::string finish)
+	{
+		Cave ref{ std::move(start) };
+		const auto prev_loc = store.find(ref);
+		if (prev_loc != end(store))
+		{
+			prev_loc->connections.push_back(std::move(finish));
+		}
+		else
+		{
+			ref.connections.push_back(std::move(finish));
+			store.insert(std::move(ref));
+		}
+	}
+
+	void add_connections(CaveStore& store, std::string_view connection)
+	{
+		AdventCheck(connection.find('-') < connection.size());
+		const auto [start_view, finish_view] = utils::split_string_at_first(connection, '-');
+		std::string start{ start_view };
+		std::string finish{ finish_view };
+		add_connection(store, start, finish);
+		add_connection(store, std::move(finish), std::move(start));
+	}
+
+	CaveStore get_cave_store(std::istream& input)
+	{
+		using ILI = utils::istream_line_iterator;
+		CaveStore result;
+		std::for_each(ILI{ input }, ILI{}, [&result](std::string_view line)
+		{
+			add_connections(result, line);
+		});
+		return result;
+	}
+
+	struct CaveRef
+	{
+		utils::small_vector<std::size_t, 3> connections;
+		CaveType type;
+		CaveRef(const CaveStore& cs, const Cave& c) : type{ get_cave_type(c.name) }
+		{
+			connections.reserve(c.connections.size());
+			std::transform(begin(c.connections),end(c.connections), std::back_inserter(connections),
+				[&cs](std::string connection)
+			{
+				const auto find_result = cs.find(connection);
+				const auto result = std::distance(begin(cs), find_result);
+				AdventCheck(result >= 0);
+				return static_cast<std::size_t>(result);
+			});
+		}
+	};
+
+	using CaveView = std::vector<CaveRef>;
+
+	CaveView get_cave_view(const CaveStore& cs)
+	{
+		CaveView result;
+		result.reserve(cs.size());
+		std::transform(begin(cs), end(cs), std::back_inserter(result),
+			[&cs](const Cave& c)
+		{
+			return CaveRef{ cs,c };
+		});
+		return result;
+	}
+
+	int get_num_routes_generic(
+		const CaveView& view,
+		std::size_t start,
+		utils::small_vector<std::size_t,16>& visited_small_caves,
+		bool can_revisit_a_small,
+		bool is_start = true)
+	{
+		AdventCheck(start < view.size());
+		const CaveRef& ref = view[start];
+		switch (ref.type)
+		{
+		case CaveType::finish:
+			return 1;
+		case CaveType::start:
+			if (is_start)
+			{
+				break;
+			}
+			else
+			{
+				return 0;
+			}
+		case CaveType::small:
+			if (std::find(begin(visited_small_caves), end(visited_small_caves), start) != end(visited_small_caves))
+			{
+				if (can_revisit_a_small)
+				{
+					can_revisit_a_small = false;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			visited_small_caves.push_back(start);
+			[[fallthrough]];
+		case CaveType::big:
+			break;
+		}
+
+		const int result = std::transform_reduce(begin(ref.connections), end(ref.connections), 0, std::plus<int>{},
+			[&visited_small_caves, &view,can_revisit_a_small](std::size_t next)
+		{
+			return get_num_routes_generic(view, next, visited_small_caves,can_revisit_a_small,false);
+		});
+		if (ref.type == CaveType::small)
+		{
+			visited_small_caves.pop_back();
+		}
+		return result;
+	}
+
+	int get_num_routes_generic(const CaveView& view, bool can_revisit_a_small)
+	{
+		const auto start = std::ranges::find_if(view, [](const CaveRef& cr) {return cr.type == CaveType::start; });
+		const auto start_idx = std::distance(begin(view), start);
+		utils::small_vector<std::size_t, 16> visited_small_caves;
+		return get_num_routes_generic(view, static_cast<std::size_t>(start_idx), visited_small_caves, can_revisit_a_small);
+	}
+
+	int solve_generic(std::istream& input, bool can_revisit_a_small)
+	{
+		const CaveStore store = get_cave_store(input);
+		const CaveView view = get_cave_view(store);
+		return get_num_routes_generic(view, can_revisit_a_small);
+	}
+
+	int solve_p1(std::istream& input)
+	{
+		return solve_generic(input, false);
+	}
+}
+
+namespace
+{
+	int solve_p2(std::istream& input)
+	{
+		return solve_generic(input, true);
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{
+			R"(start-A
+start-b
+A-c
+A-b
+b-d
+A-end
+b-end)"
+		};
+	}
+
+	std::istringstream testcase_b()
+	{
+		return std::istringstream{
+			R"(dc-end
+HN-start
+start-kj
+dc-start
+dc-HN
+LN-dc
+HN-end
+kj-sa
+kj-HN
+kj-dc)"
+		};
+	}
+
+	std::istringstream testcase_c()
+	{
+		return std::istringstream{
+			R"(fs-end
+he-DX
+fs-he
+start-DX
+pj-DX
+end-zg
+zg-sl
+zg-pj
+pj-he
+RW-he
+fs-DX
+pj-RW
+zg-RW
+start-pj
+he-WI
+zg-he
+pj-fs
+start-RW)"
+		};
+	}
+}
+
+ResultType day_twelve_p1_a()
+{
+	auto input = testcase_a();
+	return solve_p1(input);
+}
+
+ResultType day_twelve_p1_b()
+{
+	auto input = testcase_b();
+	return solve_p1(input);
+}
+
+ResultType day_twelve_p1_c()
+{
+	auto input = testcase_c();
+	return solve_p1(input);
+}
+
+ResultType day_twelve_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType day_twelve_p2_b()
+{
+	auto input = testcase_b();
+	return solve_p2(input);
+}
+
+ResultType day_twelve_p2_c()
+{
+	auto input = testcase_c();
+	return solve_p2(input);
+}
+
+ResultType advent_twelve_p1()
+{
+	auto input = advent::open_puzzle_input(12);
+	return solve_p1(input);
+}
+
+ResultType advent_twelve_p2()
+{
+	auto input = advent::open_puzzle_input(12);
+	return solve_p2(input);
+}
+
+#undef DAY12DBG
+#undef ENABLE_DAY12DBG

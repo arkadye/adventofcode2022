@@ -1,0 +1,112 @@
+#include "advent24.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY24DBG 1
+#ifdef NDEBUG
+#define DAY24DBG 0
+#else
+#define DAY24DBG ENABLE_DAY24DBG
+#endif
+
+#if DAY24DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY24DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+namespace
+{
+	int solve_p1()
+	{
+		return 0;
+	}
+}
+
+namespace
+{
+	int solve_p2(std::istream& input)
+	{
+		return 0;
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream
+		{
+			"inp x\n"
+			"mul x -1"
+		};
+	}
+
+	std::istringstream testcase_b()
+	{
+		return std::istringstream
+		{
+			"inp z\n"
+			"inp x\n"
+			"mul z 3\n"
+			"eql z x"
+		};
+	}
+
+	std::istringstream testcase_c()
+	{
+		return std::istringstream
+		{
+			"inp w\n"
+			"add z w\n"
+			"mod z 2\n"
+			"div w 2\n"
+			"add y w\n"
+			"mod y 2\n"
+			"div w 2\n"
+			"add x w\n"
+			"mod x 2\n"
+			"div w 2\n"
+			"mod w 2"
+		};
+	}
+}
+
+ResultType day_twentyfour_p1_a()
+{
+	std::istringstream input = testcase_a();
+	return solve_p1();
+}
+
+ResultType day_twentyfour_p1_b()
+{
+	std::istringstream input = testcase_b();
+	return solve_p1();
+}
+
+ResultType day_twentyfour_p1_c()
+{
+	std::istringstream input = testcase_c();
+	return solve_p1();
+}
+
+ResultType advent_twentyfour_p1()
+{
+	auto input = advent::open_puzzle_input(24);
+	return solve_p1();
+}
+
+ResultType advent_twentyfour_p2()
+{
+	auto input = advent::open_puzzle_input(24);
+	return solve_p2(input);
+}
+
+#undef DAY24DBG
+#undef ENABLE_DAY24DBG

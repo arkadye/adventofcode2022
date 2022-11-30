@@ -1,0 +1,254 @@
+#include "advent9.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY9DBG 1
+#ifdef NDEBUG
+#define DAY9DBG 0
+#else
+#define DAY9DBG ENABLE_DAY9DBG
+#endif
+
+#if DAY9DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY9DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <algorithm>
+#include <sstream>
+#include <vector>
+#include <string_view>
+#include <array>
+#include <algorithm>
+
+#include <range_contains.h>
+#include <coords.h>
+#include <istream_line_iterator.h>
+#include <int_range.h>
+
+namespace
+{
+	using Height = int;
+	using utils::coords;
+
+	class Heightmap
+	{
+		std::vector<Height> heights;
+		std::size_t num_cols = 0;
+		void check_height(int val) const
+		{
+			AdventCheck(utils::range_contains_inc<Height>(val, 0, 9));
+		}
+
+		void check_map() const
+		{
+			AdventCheck(num_cols > 0 || heights.empty());
+			if (!heights.empty())
+			{
+				AdventCheck((heights.size() % num_cols) == 0);
+			}
+			std::for_each(begin(heights), end(heights), [this](Height h) {check_height(h); });
+		}
+
+		void read_new_row(std::string_view row)
+		{
+			if (!heights.empty())
+			{
+				AdventCheck(row.size() == num_cols);
+			}
+			else
+			{
+				num_cols = row.size();
+			}
+			std::transform(begin(row), end(row), std::back_inserter(heights), [](char c)
+			{
+				return static_cast<int>(c - '0');
+			});
+		}
+
+		std::size_t get_idx(const coords& location) const
+		{
+			AdventCheckMsg(utils::range_contains_exc(location.x, 0, static_cast<int>(get_num_cols())),
+				"x-coord (", location.x, ") must be between 0 and num-cols (", get_num_cols(), ")");
+			AdventCheckMsg(utils::range_contains_exc(location.y, 0, static_cast<int>(get_num_rows())),
+				"y-coord (", location.y, ") must be between 0 and num-cols (", get_num_rows(), ")");
+
+			const std::size_t idx = static_cast<std::size_t>(location.y) * num_cols + static_cast<std::size_t>(location.x);
+			return idx;
+		}
+
+	public:
+		explicit Heightmap(std::istream& input)
+		{
+			using ILI = utils::istream_line_iterator;
+			std::for_each(ILI{ input }, ILI{}, [this](std::string_view line)
+			{
+				read_new_row(line);
+			});
+		}
+		std::size_t get_num_cols() const { return num_cols; }
+		std::size_t get_num_rows() const
+		{
+			AdventCheck(num_cols != 0);
+			AdventCheck((heights.size() % num_cols) == 0);
+			return heights.size() / num_cols;
+		}
+		std::size_t size() const { return heights.size(); }
+		coords get_coords(std::size_t idx) const
+		{
+			AdventCheck(num_cols != 0);
+			coords result;
+			result.x = static_cast<int>(idx % num_cols);
+			result.y = static_cast<int>(idx / num_cols);
+			return result;
+		}
+		Height& get_height(const coords& location)
+		{
+			const std::size_t idx = get_idx(location);
+			return heights[idx];
+		}
+
+		Height get_height(const coords& location) const
+		{
+			const std::size_t idx = get_idx(location);
+			return heights[idx];
+		}
+
+		bool is_valid_location(const coords& location) const
+		{
+			return
+				utils::range_contains_exc(location.x, 0, static_cast<Height>(get_num_cols())) &&
+				utils::range_contains_exc(location.y, 0, static_cast<Height>(get_num_rows()));
+		}
+	};
+
+	bool is_local_minimum(const Heightmap& heights, const coords& location)
+	{
+		const Height reference = heights.get_height(location);
+		const auto neighbours = location.neighbours();
+		return std::all_of(begin(neighbours), end(neighbours),
+			[&heights,&location](const coords& neighbour)
+		{
+			return !heights.is_valid_location(neighbour) ||
+				(heights.get_height(location) < heights.get_height(neighbour));
+		});
+	}
+
+	int solve_p1(const Heightmap& heights)
+	{
+		const utils::int_range range{ heights.size() };
+		return std::transform_reduce(begin(range), end(range), 0, std::plus<Height>{},
+			[&heights](std::size_t idx)
+		{
+			const coords location = heights.get_coords(idx);
+			return is_local_minimum(heights, location) ? (heights.get_height(location) + 1) : 0;
+		});
+	}
+
+	int solve_p1(std::istream& input)
+	{
+		return solve_p1(Heightmap{ input });
+	}
+}
+
+namespace
+{
+	int flood_fill(const Heightmap& heights, const coords& location, Height threshold)
+	{
+		AdventCheck(heights.is_valid_location(location));
+		if (!is_local_minimum(heights, location)) return 0;
+
+		std::vector<coords> locations_to_check{ location };
+		std::vector<coords> checked_locations;
+
+		while (!locations_to_check.empty())
+		{
+			const coords target = locations_to_check.back();
+			locations_to_check.pop_back();
+			if (std::find(begin(checked_locations), end(checked_locations), target) != end(checked_locations))
+			{
+				continue;
+			}
+			checked_locations.push_back(target);
+			const auto neighbours = target.neighbours();
+			std::copy_if(begin(neighbours), end(neighbours), std::back_inserter(locations_to_check),
+				[&heights,threshold](const coords& c)
+			{
+				if (!heights.is_valid_location(c)) return false;
+				return heights.get_height(c) < threshold;
+			});
+		}
+		return static_cast<int>(checked_locations.size());
+	}
+
+	int solve_p2(const Heightmap& heights)
+	{
+		constexpr std::size_t NUM_BASINS = 3;
+		constexpr Height FLOOD_THRESHOLD = 9;
+		std::array<Height, NUM_BASINS> best_heights{}; // Keep sorted lo-to-hi.
+		for (std::size_t idx : utils::int_range{ heights.size() })
+		{
+			const coords location = heights.get_coords(idx);
+			const int flood_size = flood_fill(heights, location, FLOOD_THRESHOLD);
+			if (flood_size > best_heights.front())
+			{
+				best_heights.front() = flood_size;
+				std::ranges::sort(best_heights);
+			}
+		}
+		return std::reduce(begin(best_heights), end(best_heights),1, std::multiplies<Height>{});
+	}
+
+	int solve_p2(std::istream& input)
+	{
+		return solve_p2(Heightmap{ input });
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{
+			R"(2199943210
+3987894921
+9856789892
+8767896789
+9899965678)"
+		};
+	}
+}
+
+ResultType day_nine_p1_a()
+{
+	auto input = testcase_a();
+	return solve_p1(input);
+}
+
+ResultType day_nine_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType advent_nine_p1()
+{
+	auto input = advent::open_puzzle_input(9);
+	return solve_p1(input);
+}
+
+ResultType advent_nine_p2()
+{
+	auto input = advent::open_puzzle_input(9);
+	return solve_p2(input);
+}
+
+#undef DAY9DBG
+#undef ENABLE_DAY9DBG

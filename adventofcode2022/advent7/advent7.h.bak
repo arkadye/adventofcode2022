@@ -1,0 +1,30 @@
+#pragma once
+
+#include "../advent/advent_types.h"
+
+namespace advent7_internal
+{
+	ResultType fuel_test_p1_a(int target);
+	ResultType fuel_test_p2_a(int target);
+}
+
+template <int TARGET>
+inline ResultType day_seven_fuel_test_p1_a()
+{
+	return advent7_internal::fuel_test_p1_a(TARGET);
+}
+
+template <int TARGET>
+inline ResultType day_seven_fuel_test_p2_a()
+{
+	return advent7_internal::fuel_test_p2_a(TARGET);
+}
+
+ResultType day_seven_target_test_p1_a();
+ResultType day_seven_target_test_p2_a();
+
+ResultType day_seven_p1_a();
+ResultType day_seven_p2_a();
+
+ResultType advent_seven_p1();
+ResultType advent_seven_p2();

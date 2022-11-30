@@ -1,0 +1,11 @@
+#pragma once
+
+#include "../advent/advent_types.h"
+
+ResultType day_twentytwo_p1_a();
+ResultType day_twentytwo_p1_b();
+ResultType day_twentytwo_p1_c();
+ResultType day_twentytwo_p2_c();
+
+ResultType advent_twentytwo_p1();
+ResultType advent_twentytwo_p2();

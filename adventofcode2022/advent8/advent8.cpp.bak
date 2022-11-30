@@ -1,0 +1,426 @@
+#include "advent8.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY8DBG 1
+#ifdef NDEBUG
+#define DAY8DBG 0
+#else
+#define DAY8DBG ENABLE_DAY8DBG
+#endif
+
+#if DAY8DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY8DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+/*
+	Consider a 7-segment display:
+		 A
+	    B C
+		 D
+		E F
+		 G
+
+	Numbers to segments:
+		0=ABCEFG (6)
+		1=CF (2 - unique)
+		2=ACDEG (5)
+		3=ACDFG (5)
+		4=BCDF (4 - unique)
+		5=ABDFG (5)
+		6=ABDEFG (6)
+		7=ACF (3 - unique)
+		8=ABCDEFG (7 - unique)
+		9=ABCDFG (6)
+
+*/
+
+#include <istream_line_iterator.h>
+#include <parse_utils.h>
+#include <trim_string.h>
+#include <range_contains.h>
+#include <bit_ops.h>
+#include <small_vector.h>
+#include <swap_remove.h>
+#include <int_range.h>
+
+#include <algorithm>
+#include <numeric>
+#include <functional>
+#include <optional>
+
+namespace
+{
+	constexpr std::size_t NUM_SEGS = 7;
+	std::array<char, NUM_SEGS> channels{
+		'a', 'b', 'c', 'd', 'e', 'f', 'g'
+	};
+
+	std::pair<std::string_view, std::string_view> get_input_output(std::string_view line)
+	{
+		auto result = utils::split_string_at_first(line, " | ");
+		return result;
+	}
+
+	int count_unique_segment_nums(std::string_view input)
+	{
+		if (input.empty()) return 0;
+		const auto [first, rest] = utils::split_string_at_first(input, ' ');
+		const bool unique_segs = [first]()
+		{
+			switch (first.size())
+			{
+			case 2:
+			case 3:
+			case 4:
+			case 7:
+				return true;
+			default:
+				break;
+			}
+			return false;
+		}();
+		return count_unique_segment_nums(rest) + (unique_segs ? 1 : 0);
+	}
+
+	int solve_p1(std::istream& input)
+	{
+		using ILI = utils::istream_line_iterator;
+		return std::transform_reduce(ILI{ input }, ILI{}, 0, std::plus<int>{}, 
+			[](std::string_view line)
+		{
+			const auto [input, output] = get_input_output(line);
+			return count_unique_segment_nums(output);
+		});
+	}
+}
+
+namespace
+{
+	constexpr std::size_t NUM_DIGITS = 4;
+
+	using Display = uint8_t;
+	constexpr Display Seg_TP = (1 << 0);
+	constexpr Display Seg_UL = (1 << 1);
+	constexpr Display Seg_UR = (1 << 2);
+	constexpr Display Seg_MD = (1 << 3);
+	constexpr Display Seg_LL = (1 << 4);
+	constexpr Display Seg_LR = (1 << 5);
+	constexpr Display Seg_BT = (1 << 6);
+
+	std::string top_row(Display d)
+	{
+		std::string result = "   ";
+		if (d & Seg_TP) result[1] = '_';
+		return result;
+	}
+
+	std::string middle_row(Display d)
+	{
+		std::string result = "   ";
+		if (d & Seg_UL) result[0] = '|';
+		if (d & Seg_MD) result[1] = '_';
+		if (d & Seg_UR) result[2] = '|';
+		return result;
+	}
+
+	std::string bottom_row(Display d)
+	{
+		std::string result = "   ";
+		if (d & Seg_LL) result[0] = '|';
+		if (d & Seg_BT) result[1] = '_';
+		if (d & Seg_LR) result[2] = '|';
+		return result;
+	}
+
+	std::string print(Display d)
+	{
+		std::ostringstream oss;
+		oss << "\n" << top_row(d)
+			<< "\n" << middle_row(d)
+			<< "\n" << bottom_row(d);
+		return oss.str();
+	}
+
+	constexpr std::array<Display, NUM_SEGS> segments{
+		Seg_TP,Seg_UL,Seg_UR,Seg_MD,Seg_LL,Seg_LR,Seg_BT
+	};
+
+	constexpr Display Seg_All = Seg_TP | Seg_UL | Seg_UR | Seg_MD | Seg_LL | Seg_LR | Seg_BT;
+	constexpr Display Seg_Nul = Display{ 0 };
+
+	constexpr Display Val_1 = Seg_UR | Seg_LR;
+	constexpr Display Val_8 = Seg_All;
+	constexpr Display Val_0 = Seg_All & ~Seg_MD;
+	constexpr Display Val_3 = Val_1 | Seg_TP | Seg_MD | Seg_BT;
+	constexpr Display Val_2 = Seg_All & ~(Seg_UL | Seg_LR);
+	constexpr Display Val_4 = Val_1 | Seg_MD | Seg_UL;
+	constexpr Display Val_5 = Seg_All & ~(Seg_UR | Seg_LL);
+	constexpr Display Val_6 = Seg_All & ~Seg_UR;
+	constexpr Display Val_7 = Val_1 | Seg_TP;
+	constexpr Display Val_9 = Seg_All & ~Seg_LL;
+
+	constexpr std::array<Display, 10> values{
+		Val_0,Val_1,Val_2,Val_3,Val_4,Val_5,Val_6,Val_7,Val_8,Val_9 
+	};
+
+	using ChannelLayout = utils::small_vector<char, NUM_SEGS>;
+	using DigitStrs = utils::small_vector<std::string_view, NUM_DIGITS>;
+
+	Display get_segment(const ChannelLayout& layout, char channel)
+	{
+		for (std::size_t i = 0; i < layout.size(); ++i)
+		{
+			if (channel == layout[i])
+			{
+				return segments[i];
+			}
+		}
+		return Seg_Nul;
+	}
+
+	Display get_segments(const ChannelLayout& layout, std::string_view digit)
+	{
+		auto get_seg = [&layout](char c)
+		{
+			return get_segment(layout, c);
+		};
+		return std::transform_reduce(begin(digit), end(digit), Seg_Nul, std::bit_or{}, get_seg);
+	}
+
+	int decode_digit(const ChannelLayout& layout, std::string_view digit)
+	{
+		AdventCheck(layout.size() == NUM_SEGS);
+		const Display display = get_segments(layout, digit);
+		for (std::size_t i = 0; i < values.size(); ++i)
+		{
+			if (display == values[i])
+			{
+				return static_cast<int>(i);
+			}
+		}
+		log << "Error: tried to decode '" << digit << "' with layout '" << std::string_view(layout.data(), layout.size())
+			<< "' and got '" << static_cast<int>(display) << "'. Result:" << print(display);
+		AdventUnreachable();
+		return -1;
+	}
+
+	std::size_t get_num_segs(Display val)
+	{
+		return utils::population(val);
+	}
+
+	bool is_valid_setup(Display d, std::size_t target_segments_on)
+	{
+		auto is_overlap = [d,target_segments_on](Display val)
+		{
+			const std::size_t num_segments_on = get_num_segs(val);
+			const bool correct_number_of_segs = (target_segments_on == num_segments_on);
+			const Display overlap = val & d;
+			const bool correct_overlap = (overlap == d);
+			return correct_number_of_segs && correct_overlap;
+		};
+		return std::ranges::any_of(values, is_overlap);
+	}
+
+	bool is_valid_digit_layout_pair(const ChannelLayout& layout, std::string_view digit)
+	{
+		const Display segments = get_segments(layout, digit);
+		const std::size_t num_segments = digit.size();
+		return is_valid_setup(segments,num_segments);
+	}
+
+	bool is_valid_layout(const ChannelLayout& layout, const std::vector<std::string_view>& digits)
+	{
+		auto is_valid = [&layout](std::string_view digit)
+		{
+			return is_valid_digit_layout_pair(layout, digit);
+		};
+		return std::ranges::all_of(digits, is_valid);
+	}
+
+	std::optional<ChannelLayout> get_channel_layout(const std::vector<std::string_view>& reference_strs, ChannelLayout order)
+	{
+		const bool is_valid = is_valid_layout(order, reference_strs);
+		if (!is_valid) return std::optional<ChannelLayout>{};
+
+		if (order.size() == NUM_SEGS) return order;
+
+		utils::small_vector<char, NUM_SEGS> unused_channels;
+		std::copy_if(begin(channels), end(channels), std::back_inserter(unused_channels),
+			[&order](char c)
+		{
+			auto find_result = std::find(begin(order), end(order), c);
+			return find_result == end(order);
+		});
+
+		for (char channel : unused_channels)
+		{
+			auto next_order = order;
+			next_order.push_back(channel);
+			auto result = get_channel_layout(reference_strs, next_order);
+			if (result.has_value()) return result;
+		}
+		return std::optional<ChannelLayout>{};
+	}
+
+	std::optional<ChannelLayout> get_channel_layout(const std::vector<std::string_view>& reference_strs)
+	{
+		auto layout = get_channel_layout(reference_strs, ChannelLayout{});
+		AdventCheck(layout.has_value());
+		return layout;
+	}
+
+	int get_value(const ChannelLayout& layout, const DigitStrs& digits)
+	{
+		const int result = std::accumulate(begin(digits), end(digits), 0,
+			[&layout](int prev, std::string_view digit)
+		{
+			const int decoded = decode_digit(layout, digit);
+			AdventCheck(utils::range_contains_exc(decoded, 0, 10));
+			return 10 * prev + decoded;
+		});
+		return result;
+	}
+
+	int get_value(const std::vector<std::string_view>& reference_strs, const DigitStrs& digits)
+	{
+		const auto layout = get_channel_layout(reference_strs);
+		if (layout.has_value())
+		{
+			const int result = get_value(layout.value(), digits);
+			return result;
+		}
+		AdventUnreachable();
+		return -1;
+	}
+
+	using P2Params = std::pair<std::vector<std::string_view>, DigitStrs>;
+
+	P2Params read_line(std::string_view line)
+	{
+		P2Params result;
+		auto [ref, digits] = get_input_output(line);
+		ref = utils::trim_string(ref);
+		digits = utils::trim_string(digits);
+
+		while (!ref.empty())
+		{
+			auto [word, rest] = utils::split_string_at_first(ref, ' ');
+			word = utils::trim_string(word);
+			result.first.push_back(word);
+			ref = utils::trim_string(rest);
+		}
+
+		while (!digits.empty())
+		{
+			auto [word, rest] = utils::split_string_at_first(digits, ' ');
+			word = utils::trim_string(word);
+			result.first.push_back(word);
+			result.second.push_back(word);
+			digits = utils::trim_string(rest);
+		}
+
+		return result;
+	}
+
+	int solve_p2_line(std::string_view line)
+	{
+		const auto [ref, digits] = read_line(line);
+		const int result = get_value(ref, digits);
+		log << "\nInput line: '" << line << "': " << result;
+		return result;
+	}
+
+	int solve_p2(std::istream& input)
+	{
+		log << '\n';
+		for (Display d : values)
+		{
+			std::string s = std::to_string(static_cast<int>(d));
+			while (s.size() < 3) s.insert(begin(s), ' ');
+			log << s << ' ';
+		}
+		log << '\n';
+
+		for (Display d : values)
+		{
+			log << top_row(d) << ' ';
+		}
+		log << '\n';
+
+		for (Display d : values)
+		{
+			log << middle_row(d) << ' ';
+		}
+		log << '\n';
+
+		for (Display d : values)
+		{
+			log << bottom_row(d) << ' ';
+		}
+		log << '\n';
+
+		std::string_view layout_str = "abcdefg";
+		std::string_view digit = "cbafd";
+		is_valid_digit_layout_pair(ChannelLayout(begin(layout_str), end(layout_str)), digit);
+		using ILI = utils::istream_line_iterator;
+		const int result = std::transform_reduce(ILI{ input }, ILI{}, 0, std::plus<int>{}, solve_p2_line);
+		log << '\n';
+		return result;
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{
+			R"(be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce)"
+		};
+	}
+}
+
+ResultType day_eight_p1_a()
+{
+	auto input = testcase_a();
+	return solve_p1(input);
+}
+
+ResultType day_eight_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType advent_eight_p1()
+{
+	auto input = advent::open_puzzle_input(8);
+	return solve_p1(input);
+}
+
+ResultType advent_eight_p2()
+{
+	auto input = advent::open_puzzle_input(8);
+	return solve_p2(input);
+}
+
+#undef DAY8DBG
+#undef ENABLE_DAY8DBG

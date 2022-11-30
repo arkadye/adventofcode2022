@@ -1,0 +1,36 @@
+﻿  advent10.cpp
+  advent11.cpp
+  advent12.cpp
+  advent13.cpp
+  advent14.cpp
+  advent15.cpp
+  advent16.cpp
+  advent17.cpp
+  advent18.cpp
+  advent19.cpp
+  advent1.cpp
+  advent20.cpp
+  advent21.cpp
+  advent22.cpp
+  advent23.cpp
+  advent24.cpp
+  advent25.cpp
+  advent2.cpp
+  advent3.cpp
+  advent4.cpp
+  Compiling...
+  advent5.cpp
+  advent6.cpp
+  advent7.cpp
+  advent8.cpp
+  advent9.cpp
+  main.cpp
+  advent_of_code_testcases.cpp
+  isqrt.cpp
+  md5.cpp
+  parse_utils.cpp
+  Generating code
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+  All 6178 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  adventofcode2021.vcxproj -> C:\Users\User\source\repos\adventofcode2021\Profile\adventofcode2021.exe

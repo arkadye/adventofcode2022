@@ -1,0 +1,19 @@
+#pragma once
+
+#include "../advent/advent_types.h"
+
+ResultType day_sixteen_p1_a();
+ResultType day_sixteen_p1_b();
+ResultType day_sixteen_p1_c();
+ResultType day_sixteen_p1_d();
+ResultType day_sixteen_p2_e();
+ResultType day_sixteen_p2_f();
+ResultType day_sixteen_p2_g();
+ResultType day_sixteen_p2_h();
+ResultType day_sixteen_p2_i();
+ResultType day_sixteen_p2_j();
+ResultType day_sixteen_p2_k();
+ResultType day_sixteen_p2_l();
+
+ResultType advent_sixteen_p1();
+ResultType advent_sixteen_p2();

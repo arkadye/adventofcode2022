@@ -1,0 +1,335 @@
+#include "advent17.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY17DBG 1
+#ifdef NDEBUG
+#define DAY17DBG 0
+#else
+#define DAY17DBG ENABLE_DAY17DBG
+#endif
+
+#if DAY17DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY17DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <algorithm>
+#include <string_view>
+#include <set>
+
+#include <range_contains.h>
+#include <small_vector.h>
+#include <int_range.h>
+#include <to_value.h>
+#include <split_string.h>
+#include <parse_utils.h>
+#include <coords.h>
+
+namespace
+{
+	using utils::small_vector;
+	using utils::coords;
+
+	class Range
+	{
+		int lo, hi;
+	public:
+		int min() const { return lo; }
+		int max() const { return hi; }
+		bool within(int test) const { return utils::range_contains_inc(test, min(), max()); }
+		bool under(int test) const { return test < min(); }
+		bool over(int test) const { return test > max(); }
+		Range(int small, int large) : lo{ small }, hi{ large }
+		{
+			AdventCheck(small <= large);
+		}
+	};
+
+	int triangle(int v)
+	{
+		return (v * (v + 1)) / 2;
+	};
+
+	small_vector<int,2> does_y_intercept(int init, const Range& y_range)
+	{
+		small_vector<int, 2> result;
+		int y_coord = 0;
+		int y_velocity = init;
+		for (int tick = 0; (y_coord >= y_range.min() || y_velocity > 0); ++tick)
+		{
+			/*if (y_range.over(y_coord) && y_velocity > 0)
+			{
+				tick += 2 * y_velocity + 1;
+				y_velocity *= -1;
+				--y_velocity;
+			}*/
+			if (y_range.within(y_coord))
+			{
+				result.push_back(tick);
+			}
+			y_coord += y_velocity;
+			--y_velocity;
+		}
+		return result;
+	}
+
+	int simulate_steps_x(int num_steps, int init_x)
+	{
+		const int max_range = triangle(init_x);
+		
+		if (num_steps >= init_x)
+		{
+			return max_range;
+		}
+
+		const int unused_steps = init_x - num_steps;
+		const int unused_range = triangle(unused_steps);
+		return max_range - unused_range;
+	}
+
+	bool can_x_intercept(int num_steps, const Range& x_range)
+	{
+		const auto sim = [num_steps](int power)
+		{
+			return simulate_steps_x(num_steps, power);
+		};
+
+		if (x_range.within(0))
+		{
+			return true;
+		}
+
+		// Increase largest until we find a value or overshoot.
+		int smallest = 0;
+		int largest = 1;
+		while (true)
+		{
+			const int range = sim(largest);
+			if (x_range.within(range))
+			{
+				return true;
+			}
+			else if (x_range.over(range))
+			{
+				break;
+			}
+			smallest = largest;
+			largest *= 2;
+		}
+
+		// Binary chop until we find our result or prove it to be impossible.
+		while (true)
+		{
+			AdventCheck(!x_range.within(sim(smallest)));
+			AdventCheck(!x_range.within(sim(largest)));
+
+			const int difference = largest - smallest;
+			if (difference <= 1)
+			{
+				return false;
+			}
+			const int offset = std::max(difference / 2, 1);
+			const int test = smallest + offset;
+			const int range = sim(test);
+			if (x_range.within(range))
+			{
+				return true;
+			}
+			if (x_range.under(range))
+			{
+				smallest = test;
+			}
+			else if (x_range.over(range))
+			{
+				largest = test;
+			}
+		}
+		AdventUnreachable();
+		return false;
+	}
+
+	int find_maximum_possible_y_velocity(const Range& y_range)
+	{
+		const int max = std::max(y_range.max(), 0);
+		const int min = y_range.min() < 0 ? (y_range.min() * -1) - 1 : 0;
+		return std::max(max, min);
+	}
+
+	int find_lowest_possible_y_velocity(const Range& y_range)
+	{
+		return y_range.min() < 0 ? y_range.min() : 0;
+	}
+
+	int find_highest_y_velocity(const Range& x_range, const Range& y_range)
+	{
+		int init = find_maximum_possible_y_velocity(y_range);
+		while (true)
+		{
+			AdventCheck(init >= y_range.min());
+			const auto intercepts = does_y_intercept(init, y_range);
+			for (int steps : intercepts)
+			{
+				if (can_x_intercept(steps, x_range))
+				{
+					return init;
+				}
+			}
+			--init;
+		}
+		AdventUnreachable();
+		return -1;
+	}
+
+	Range read_range(std::string_view input)
+	{
+		const auto [min_str,second] = utils::split_string_at_first(input, '.');
+		const std::string_view max_str = utils::remove_specific_prefix(second, ".");
+		const int min = utils::to_value<int>(min_str);
+		const int max = utils::to_value<int>(max_str);
+		return Range{ min,max };
+	}
+
+	Range read_range(std::string_view input, char expected_axis)
+	{
+		std::string prefix{ expected_axis,'=' };
+		return read_range(utils::remove_specific_prefix(input, prefix));
+	}
+
+	std::pair<Range, Range> read_input(std::string_view input)
+	{
+		input = utils::remove_specific_prefix(input, "target area: ");
+		const auto [x_input, y_input] = utils::split_string_at_first(input, ',');
+		const Range x = read_range(x_input, 'x');
+		const Range y = read_range(utils::trim_left(y_input), 'y');
+		return std::pair{ x,y };
+	}
+
+	int solve_p1(std::string_view input)
+	{
+		const auto [x_range, y_range] = read_input(input);
+		const int max_velocity = find_highest_y_velocity(x_range, y_range);
+		return max_velocity > 0 ? triangle(max_velocity) : 0;
+	}
+
+	int solve_p1(std::istream& input)
+	{
+		std::string line;
+		std::getline(input, line);
+		return solve_p1(line);
+	}
+}
+
+namespace
+{
+	int get_minimum_x(int target)
+	{
+		int low = 0;
+		int high = 1;
+		while (true)
+		{
+			const int range = triangle(high);
+			if (range > target)
+			{
+				break;
+			}
+			low = high;
+			high *= 2;
+		}
+
+		while (true)
+		{
+			const int difference = high - low;
+			if (difference <= 1)
+			{
+				return high;
+			}
+			const int offset = std::max(difference / 2,1);
+			const int test = low + offset;
+			const int range = triangle(test);
+			if (range < target)
+			{
+				low = test;
+			}
+			else if (range >= target)
+			{
+				high = test;
+			}
+		}
+		AdventUnreachable();
+		return -1;
+	}
+
+	int solve_p2(std::string_view input)
+	{
+		const auto [x_range, y_range] = read_input(input);
+		std::set<coords> results;
+		const int min_y = find_lowest_possible_y_velocity(y_range);
+		const int max_y = find_maximum_possible_y_velocity(y_range);
+		const int min_x = get_minimum_x(x_range.min());
+		const int max_x = x_range.max();
+		for (int y_init : utils::int_range{ min_y,max_y + 1 })
+		{
+			const auto steps = does_y_intercept(y_init,y_range);
+			for (int num_steps : steps)
+			{
+				for (int x_init : utils::int_range{ min_x,max_x + 1 })
+				{
+					const int x = simulate_steps_x(num_steps, x_init);
+					if (x_range.within(x))
+					{
+						results.insert(coords{ x_init,y_init });
+					}
+				}
+			}
+		}
+		return static_cast<int>(results.size());
+	}
+
+	int solve_p2(std::istream& input)
+	{
+		std::string line;
+		std::getline(input, line);
+		return solve_p2(line);
+	}
+}
+
+namespace
+{
+	std::string_view testcase_a()
+	{
+		return "target area: x=20..30, y=-10..-5";
+	}
+}
+
+ResultType day_seventeen_p1_a()
+{
+	return solve_p1(testcase_a());
+}
+
+ResultType day_seventeen_p2_a()
+{
+	return solve_p2(testcase_a());
+}
+
+ResultType advent_seventeen_p1()
+{
+	auto input = advent::open_puzzle_input(17);
+	return solve_p1(input);
+}
+
+ResultType advent_seventeen_p2()
+{
+	auto input = advent::open_puzzle_input(17);
+	return solve_p2(input);
+}
+
+#undef DAY17DBG
+#undef ENABLE_DAY17DBG

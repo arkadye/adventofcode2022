@@ -1,0 +1,16 @@
+#pragma once
+
+#include "../advent/advent_types.h"
+
+namespace advent8_internal
+{
+	ResultType day_eleven_p1_testcase(int num_steps);
+}
+
+template <int NUM_STEPS>
+inline ResultType day_eleven_p1_a() { return advent8_internal::day_eleven_p1_testcase(NUM_STEPS); }
+
+ResultType day_eleven_p2_a();
+
+ResultType advent_eleven_p1();
+ResultType advent_eleven_p2();

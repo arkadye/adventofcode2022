@@ -1,0 +1,356 @@
+#include "advent20.h"
+#include "../advent/advent_utils.h"
+
+#define ENABLE_DAY20DBG 1
+#ifdef NDEBUG
+#define DAY20DBG 0
+#else
+#define DAY20DBG ENABLE_DAY20DBG
+#endif
+
+#if DAY20DBG
+	#include <iostream>
+#endif
+
+namespace
+{
+#if DAY20DBG
+	std::ostream & log = std::cout;
+#else
+	struct {	template <typename T> auto& operator<<(const T&) const noexcept { return *this; } } log;
+#endif
+}
+
+#include <bitset>
+#include <algorithm>
+#include <string>
+#include <array>
+
+#include <sorted_vector.h>
+#include <int_range.h>
+#include <coords.h>
+#include <istream_line_iterator.h>
+
+namespace
+{
+	constexpr std::size_t NUM_BITS = 9;
+	constexpr std::size_t NUM_OPTIONS = std::size_t{ 1 } << NUM_BITS;
+
+	constexpr char DARK = '.';
+	constexpr char LIGHT = '#';
+
+	using utils::coords;
+
+	struct LinearExtent
+	{
+		int min = 0;
+		int max = 0;
+	};
+
+	struct BoxExtent
+	{
+		LinearExtent x_extent;
+		LinearExtent y_extent;
+	};
+
+	utils::int_range<int> get_range(const LinearExtent& le)
+	{
+		AdventCheck(le.min <= le.max);
+		return utils::int_range{ le.min,le.max+1 };
+	}
+
+	class Picture
+	{
+		utils::sorted_vector<coords> m_data;
+		bool m_invert = false;
+
+		void add_pixel(const coords& c)
+		{
+			m_data.insert(c);
+		}
+
+		void remove_pixel(const coords& c)
+		{
+			m_data.erase(c);
+			AdventCheck(!m_data.contains(c));
+		}
+
+	public:
+		BoxExtent get_extent() const
+		{
+			BoxExtent result;
+			if (!m_data.empty())
+			{
+				result.x_extent.min = m_data.front().x - 1;
+				result.x_extent.max = m_data.back().x + 1;
+				const auto y_result = std::minmax_element(begin(m_data), end(m_data),
+					[](const coords& l, const coords& r)
+				{
+					return l.y < r.y;
+				});
+				result.y_extent.min = y_result.first->y - 1;
+				result.y_extent.max = y_result.second->y + 1;
+			}
+			return result;
+		}
+
+		bool is_lit(const coords& c) const
+		{
+			return m_invert != m_data.contains(c);
+		}
+
+		std::size_t pixel_density() const
+		{
+			return m_data.size();
+		}
+
+		std::string print() const
+		{
+			const BoxExtent extent = get_extent();
+			std::ostringstream result;
+			for (int y : get_range(extent.y_extent))
+			{
+				for (int x : get_range(extent.x_extent))
+				{
+					result << (is_lit(coords{ x,y }) ? LIGHT : DARK);
+				}
+				result << '\n';
+			}
+			return result.str();
+		}
+
+		bool is_inverted() const { return m_invert; }
+
+		void lighten_pixel(const coords& c)
+		{
+			if (m_invert)
+			{
+				remove_pixel(c);
+			}
+			else
+			{
+				add_pixel(c);
+			}
+		}
+
+		void darken_pixel(const coords& c)
+		{
+			if (m_invert)
+			{
+				add_pixel(c);
+			}
+			else
+			{
+				remove_pixel(c);
+			}
+		}
+
+		void set_invert(bool new_invert)
+		{
+			m_invert = new_invert;
+		}
+
+		void reset()
+		{
+			m_invert = false;
+			m_data.clear();
+		}
+	};
+
+	Picture read_picture(std::istream& input)
+	{
+		const auto read_line = [&input]()
+		{
+			std::string line;
+			std::getline(input, line);
+			return line;
+		};
+
+		Picture result;
+		int y = 0;
+		for (std::string line = read_line(); !line.empty(); ++y, line = read_line())
+		{
+			for (int x = 0;x < static_cast<int>(line.size());++x)
+			{
+				const char c = line[x];
+				if (c == LIGHT)
+				{
+					result.lighten_pixel(coords{ x,y });
+				}
+			}
+		}
+
+		return result;
+	}
+
+	using EnhanceOptions = std::bitset<NUM_OPTIONS>;
+
+	EnhanceOptions read_options(std::istream& input)
+	{
+		std::string line;
+		std::getline(input, line);
+		
+		EnhanceOptions result;
+		
+		AdventCheck(line.size() == result.size());
+
+		for (std::size_t idx : utils::int_range{ line.size() })
+		{
+			result.set(idx, line[idx] == LIGHT);
+		}
+		
+		return result;
+	}
+
+	struct PuzzleState
+	{
+		EnhanceOptions options;
+		Picture picture;
+	};
+
+	PuzzleState read_input(std::istream& input)
+	{
+		PuzzleState result;
+		result.options = read_options(input);
+		input.ignore();
+		result.picture = read_picture(input);
+		return result;
+	}
+
+	std::array<bool, NUM_BITS> get_enhance_data(const Picture& picture, const coords& c)
+	{
+		std::array<bool, NUM_BITS> result;
+		const auto range = get_range(LinearExtent{ -1,1 });
+		auto write_pos = begin(result);
+		for (int y : range)
+		{
+			for (int x : range)
+			{
+				const coords loc = c + coords{ x,y };
+				(*write_pos++) = picture.is_lit(loc);
+			}
+		}
+		AdventCheck(write_pos == end(result));
+		return result;
+	}
+
+	bool should_light(const EnhanceOptions& options, const std::array<bool, NUM_BITS>& pixel_data)
+	{
+		const std::size_t idx = std::accumulate(begin(pixel_data), end(pixel_data), std::size_t{ 0 },
+			[](std::size_t prev, bool lit)
+		{
+			return 2 * prev + (lit ? 1 : 0);
+		});
+		AdventCheck(idx < options.size());
+		return options[idx];
+	}
+
+	void enhance(const EnhanceOptions& options, const Picture& before_picture, Picture& result)
+	{
+		result.reset();
+		if (!before_picture.is_inverted() && options[0] ||
+			before_picture.is_inverted() && options[options.size()-1])
+		{
+			result.set_invert(true);
+		}
+
+		const BoxExtent extent = before_picture.get_extent();
+		for (int x : get_range(extent.x_extent))
+		{
+			for (int y : get_range(extent.y_extent))
+			{
+				const coords c{ x,y };
+				const auto enhance_data = get_enhance_data(before_picture, c);
+				const bool enhanced_lit = should_light(options, enhance_data);
+				if (enhanced_lit && !result.is_inverted())
+				{
+					result.lighten_pixel(c);
+				}
+				else if (!enhanced_lit && result.is_inverted())
+				{
+					result.darken_pixel(c);
+				}
+			}
+		}
+	}
+
+	Picture enhance_n_steps(const EnhanceOptions& options, Picture before_picture, int steps)
+	{
+		log << "\nOriginal:\n" << before_picture.print();
+		Picture other;
+		for (auto i : utils::int_range{ steps })
+		{
+			enhance(options, before_picture, other);
+			std::swap(before_picture, other);
+			log << "\nStep " << i + 1 << ":\n" << before_picture.print();
+		}
+		return before_picture;
+	}
+
+	std::size_t solve_generic(std::istream& input, int num_steps)
+	{
+		const PuzzleState state = read_input(input);
+		const Picture result = enhance_n_steps(state.options, state.picture, num_steps);
+		return result.pixel_density();
+	}
+
+	std::size_t solve_p1(std::istream& input)
+	{
+		return solve_generic(input, 2);
+	}
+
+	std::size_t solve_p2(std::istream& input)
+	{
+		return solve_generic(input, 50);
+	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream
+		{
+			"..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..##"
+			"#..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###"
+			".######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#."
+			".#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#....."
+			".#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.."
+			"...####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#....."
+			"..##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#\n"
+			"\n"
+			"#..#.\n"
+			"#....\n"
+			"##..#\n"
+			"..#..\n"
+			"..###"
+		};
+	}
+}
+
+ResultType day_twenty_p1_a()
+{
+	auto input = testcase_a();
+	return solve_p1(input);
+}
+
+ResultType day_twenty_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
+}
+
+ResultType advent_twenty_p1()
+{
+	auto input = advent::open_puzzle_input(20);
+	return solve_p1(input);
+}
+
+ResultType advent_twenty_p2()
+{
+	auto input = advent::open_puzzle_input(20);
+	return solve_p2(input);
+}
+
+#undef DAY20DBG
+#undef ENABLE_DAY20DBG
