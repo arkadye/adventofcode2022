@@ -70,7 +70,7 @@ namespace
 			4,11,16,23,	4,11,16,23,	4,11,16,23,	4,11,16,23,
 			6,10,15,21,	6,10,15,21,	6,10,15,21,	6,10,15,21
 		};
-		assert(range_contains_exc<int>(index, 0, values.size()));
+		assert(range_contains_exc<int>(index, 0, static_cast<int>(values.size())));
 		return values[index];
 	}
 
@@ -256,7 +256,7 @@ MD5Digest MD5Hasher::get_digest() const noexcept
 		push_char_non_msg(0, fake_size++);
 	}
 	const auto suffix = message_size * 8;
-	for (auto i : int_range(sizeof(uint64_t)))
+	for (auto i : int_range<int>(sizeof(uint64_t)))
 	{
 		push_char_non_msg(get_char_in_pos(suffix, i), fake_size++);
 	}
@@ -317,7 +317,7 @@ uint8_t MD5Digest::get_byte(int i) const noexcept
 {
 	assert(i < DIGEST_LENGTH);
 	const auto word = get_word(i / 4);
-	const auto byte_index = i % sizeof(word);
+	const int byte_index = i % sizeof(word);
 	return get_char_in_pos(word, byte_index);
 }
 
