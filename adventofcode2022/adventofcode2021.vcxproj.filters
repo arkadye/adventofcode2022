@@ -150,7 +150,7 @@
     <ClInclude Include="utils\md5.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\min_transform.h">
+    <ClInclude Include="utils\comparisons.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\parse_utils.h">
@@ -271,6 +271,12 @@
       <Filter>solutions\advent25</Filter>
     </ClInclude>
     <ClInclude Include="utils\position3d.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\istream_block_iterator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\string_line_iterator.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>

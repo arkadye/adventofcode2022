@@ -69,10 +69,11 @@
     <ClInclude Include="utils\index_iterator2.h" />
     <ClInclude Include="utils\int_range.h" />
     <ClInclude Include="utils\isqrt.h" />
+    <ClInclude Include="utils\istream_block_iterator.h" />
     <ClInclude Include="utils\istream_line_iterator.h" />
     <ClInclude Include="utils\is_sorted.h" />
     <ClInclude Include="utils\md5.h" />
-    <ClInclude Include="utils\min_transform.h" />
+    <ClInclude Include="utils\comparisons.h" />
     <ClInclude Include="utils\parse_utils.h" />
     <ClInclude Include="utils\bit_ops.h" />
     <ClInclude Include="utils\position3d.h" />
@@ -84,6 +85,7 @@
     <ClInclude Include="utils\sorted_vector.h" />
     <ClInclude Include="utils\span.h" />
     <ClInclude Include="utils\split_string.h" />
+    <ClInclude Include="utils\string_line_iterator.h" />
     <ClInclude Include="utils\swap_remove.h" />
     <ClInclude Include="utils\to_value.h" />
     <ClInclude Include="utils\transform_if.h" />
@@ -239,15 +241,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\arkady.english\Documents\GitHub\adventofcode2022\adventofcode2022\utils;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\arkady.english\Documents\GitHub\adventofcode2022\adventofcode2022\utils;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\User\source\repos\adventofcode2021\adventofcode2021\utils;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\arkady.english\Documents\GitHub\adventofcode2022\adventofcode2022\utils;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
