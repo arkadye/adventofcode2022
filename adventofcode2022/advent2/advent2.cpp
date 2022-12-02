@@ -21,11 +21,124 @@ namespace
 #endif
 }
 
+#include "sorted_vector.h"
+#include "enum_order.h"
+#include "istream_line_iterator.h"
+#include "range_contains.h"
+
+#include <numeric>
+#include <string_view>
+
 namespace
 {
+	// Score for winning with this move.
+	enum class Move : uint8_t
+	{
+		Rock		= 1,
+		Paper		= 2,
+		Scissors	= 3
+	};
+
+	Move to_move(char c)
+	{
+		const utils::flat_map<char, Move, std::less<char>, 6> move_lookup = []()
+		{
+			utils::flat_map<char, Move, std::less<char>, 6> move_lookup;
+			move_lookup.insert_unique('A', Move::Rock);
+			move_lookup.insert_unique('B', Move::Paper);
+			move_lookup.insert_unique('C', Move::Scissors);
+			move_lookup.insert_unique('X', Move::Rock); 
+			move_lookup.insert_unique('Y', Move::Paper); 
+			move_lookup.insert_unique('Z', Move::Scissors);
+			return move_lookup;
+		}();
+
+		return move_lookup.at(c);
+	}
+
+	int get_move_score(Move move)
+	{
+		return static_cast<int>(move);
+	}
+
+	// Score for right winning.
+	enum class MatchResult : uint8_t
+	{
+		LeftWins	= 0,
+		Draw		= 3,
+		RightWins	= 6
+	};
+
+	int get_result_score(MatchResult result)
+	{
+		return static_cast<int>(result);
+	}
+
+	struct ResultLookup
+	{
+	private:
+		utils::flat_map<Move,MatchResult,utils::EnumSorter<Move>,3> results;
+	public:
+		ResultLookup(MatchResult vs_rock, MatchResult vs_paper, MatchResult vs_scissors)
+		{
+			results.insert_unique(Move::Rock,vs_rock);
+			results.insert_unique(Move::Paper,vs_paper);
+			results.insert_unique(Move::Scissors,vs_scissors);
+		}
+		MatchResult get_result(Move move) const
+		{
+			return results.at(move);
+		}
+	};
+
+	using MatchLookup = utils::flat_map<Move, ResultLookup, utils::EnumSorter<Move>, 3>;
+	MatchLookup get_match_lookup()
+	{
+		MatchLookup match_lookup;
+		match_lookup.insert_unique(Move::Rock,		ResultLookup{ MatchResult::Draw,		MatchResult::RightWins,	MatchResult::LeftWins });
+		match_lookup.insert_unique(Move::Paper,		ResultLookup{ MatchResult::LeftWins,	MatchResult::Draw,		MatchResult::RightWins });
+		match_lookup.insert_unique(Move::Scissors,	ResultLookup{ MatchResult::RightWins,	MatchResult::LeftWins,	MatchResult::Draw });
+		return match_lookup;
+	}
+
+	MatchResult play(Move left, Move right)
+	{
+		const MatchLookup match_lookup = get_match_lookup();
+		return match_lookup.at(left).get_result(right);
+	}
+
+	int get_rights_score(Move left, Move right)
+	{
+		const MatchResult match_result = play(left,right);
+		return get_move_score(right) + get_result_score(match_result);
+	}
+
+	int get_score_from_chars(char left, char right)
+	{
+		AdventCheck(utils::range_contains_inc(left,'A','C'));
+		AdventCheck(utils::range_contains_inc(right,'X','Z'));
+		const Move left_move = to_move(left);
+		const Move right_move = to_move(right);
+		return get_rights_score(left_move,right_move);
+	}
+
+	int get_score_from_line(std::string_view line)
+	{
+		AdventCheck(line.size() == std::size_t{3});
+		AdventCheck(line[1] == ' ');
+		return get_score_from_chars(line[0],line[2]);
+	}
+
+	int score_match(std::istream & input)
+	{
+		using ILI = utils::istream_line_iterator;
+		const int result = std::transform_reduce(ILI{input},ILI{},0,std::plus<int>{},get_score_from_line);
+		return result;
+	}
+
 	int solve_p1(std::istream& input)
 	{
-		return 0;
+		return score_match(input);
 	}
 }
 
@@ -35,6 +148,20 @@ namespace
 	{
 		return 0;
 	}
+}
+
+namespace
+{
+	std::istringstream testcase_a()
+	{
+		return std::istringstream{ "A Y\nB X\nC Z" };
+	}
+}
+
+ResultType day_two_p1_a()
+{
+	std::istringstream input = testcase_a();
+	return solve_p1(input);
 }
 
 ResultType advent_two_p1()

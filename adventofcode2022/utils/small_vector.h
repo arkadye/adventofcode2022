@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <compare>
 #include <algorithm>
+#include <cstring>
 
 namespace utils
 {

@@ -64,6 +64,7 @@
     <ClInclude Include="utils\combine_maps.h" />
     <ClInclude Include="utils\conway_simulation.h" />
     <ClInclude Include="utils\coords.h" />
+    <ClInclude Include="utils\enum_order.h" />
     <ClInclude Include="utils\erase_remove_if.h" />
     <ClInclude Include="utils\index_iterator.h" />
     <ClInclude Include="utils\index_iterator2.h" />

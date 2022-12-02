@@ -279,6 +279,9 @@
     <ClInclude Include="utils\string_line_iterator.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="utils\enum_order.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\advent_of_code_testcases.cpp">

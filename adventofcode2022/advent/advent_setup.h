@@ -2,13 +2,14 @@
 
 #include "advent_testcase_setup.h"
 
-static const std::string DEFAULT_FILTER = "_one_";
+static const std::string DEFAULT_FILTER = "_two_";
 
 static const verification_test tests[] =
 {
 	TESTCASE(day_one_p1_a,24000),
 	TESTCASE(day_one_p2_a,45000),
-	DAY(one,Dummy{},Dummy{}),
+	DAY(one,70698,206643),
+	TESTCASE(day_two_p1_a,15),
 	DAY(two,Dummy{},Dummy{}),
 	DAY(three,Dummy{},Dummy{}),
 	DAY(four,Dummy{},Dummy{}),

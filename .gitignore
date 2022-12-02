@@ -51,4 +51,4 @@
 *.bak
 
 # For Advent of Code, don't accidentally upload puzzle data.
-.txt
+*.txt

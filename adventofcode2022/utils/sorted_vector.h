@@ -1,21 +1,21 @@
 #pragma once
 
-#include <vector>
+#include "small_vector.h"
 #include <algorithm>
 #include <functional>
 #include <cassert>
 
 namespace utils
 {
-	template <typename T, typename BinaryPred = std::less<T>>
+	template <typename T, typename BinaryPred = std::less<T>, std::size_t BufferSize = 1>
 	class sorted_vector
 	{
 	public:
-		using iterator = typename std::vector<T>::iterator;
-		using const_iterator = typename std::vector<T>::const_iterator;
+		using iterator = typename utils::small_vector<T,BufferSize>::iterator;
+		using const_iterator = typename utils::small_vector<T,BufferSize>::const_iterator;
 		using value_type = T;
-	private:
-		mutable std::vector<T> m_data;
+	protected:
+		mutable utils::small_vector<T,BufferSize> m_data;
 		BinaryPred m_compare;
 		mutable bool m_sorted;
 	public:
@@ -249,7 +249,6 @@ namespace utils
 		{
 			m_data.insert(end(m_data), first, last);
 			m_sorted = false;
-			break;
 		}
 
 		// Implies keep_sorted = true. Tries to insert just before hint.
@@ -375,10 +374,22 @@ namespace utils
 		auto crend() const { sort(); return m_data.crend(); }
 	};
 
+	template <std::size_t BufferSize, typename T, typename BinaryPredicate>
+	inline auto make_sorted_vector_with_buffer(const BinaryPredicate& pred)
+	{
+		return sorted_vector<T, BinaryPredicate, BufferSize>(pred);
+	}
+
 	template <typename T, typename BinaryPredicate>
 	inline auto make_sorted_vector(const BinaryPredicate& pred)
 	{
-		return sorted_vector<T, BinaryPredicate>(pred);
+		return sorted_vector<T, BinaryPredicate, 1>(pred);
+	}
+
+	template <std::size_t BufferSize, typename T, typename InputIt, typename BinaryPredicate>
+	inline auto make_sorted_vector_with_buffer(InputIt first, InputIt last, const BinaryPredicate& pred)
+	{
+		return sorted_vector<T, BinaryPredicate, BufferSize>(first, last, pred);
 	}
 
 	template <typename T, typename InputIt, typename BinaryPredicate>
@@ -386,6 +397,198 @@ namespace utils
 	{
 		return sorted_vector<T, BinaryPredicate>(first, last, pred);
 	}
+
+	template <typename KeyType, typename MappedType, typename KeyCompare>
+	struct MapComparator
+	{
+		using ValueType = std::pair<KeyType,MappedType>;
+		constexpr bool operator()(const ValueType& left, const ValueType& right) const
+		{
+			KeyCompare comp{};
+			return comp(left.first,right.first);
+		}
+	};
+
+	template<typename KeyType, typename MappedType, typename KeyCompare = std::less<KeyType>, std::size_t BufferSize = 1>
+	class flat_map : public sorted_vector<std::pair<KeyType, MappedType>, MapComparator<KeyType, MappedType, KeyCompare>, BufferSize>
+	{
+	public:
+ 		using underlying_type = sorted_vector<std::pair<KeyType, MappedType>, MapComparator<KeyType, MappedType, KeyCompare>, BufferSize>;
+ 		using underlying_type::operator[];
+ 		using underlying_type::insert;
+ 		using iterator = underlying_type::iterator;
+ 		using const_iterator = underlying_type::const_iterator;
+ 		using key_type = KeyType;
+ 		using mapped_type = MappedType;
+		using value_type = underlying_type::value_type;
+ 
+ 		iterator lower_bound_by_key(const KeyType& key)
+ 		{
+			const std::size_t result_idx = lower_bound_index(key);
+			auto result = underlying_type::begin();
+			std::advance(result,result_idx);
+			return result;
+ 		}
+ 
+ 		const_iterator lower_bound_by_key(const KeyType& key) const
+ 		{
+			const std::size_t result_idx = lower_bound_index(key);
+			auto result = underlying_type::cbegin();
+			std::advance(result, result_idx);
+			return result;
+ 		}
+ 		
+ 		iterator find_by_key(const KeyType& key)
+ 		{
+ 			const iterator result = lower_bound_by_key(key);
+			auto end_it = underlying_type::end();
+ 			if (result != end_it)
+ 			{
+				KeyCompare comp{};
+				if (!comp(key, result->first) && !comp(result->first, key))
+				{
+					return result;
+				}
+			}
+			return end_it;
+		}
+
+		const_iterator find_by_key(const KeyType& key) const
+		{
+			const const_iterator result = lower_bound_by_key(key);
+			auto end_it = underlying_type::end();
+			if (result != end_it)
+			{
+				KeyCompare comp{};
+				if (!comp(key, result->first) && !comp(result->first, key))
+				{
+					return result;
+				}
+			}
+			return end_it;
+		}
+		
+		bool contains_key(const KeyType& key) const
+		{
+			const const_iterator result = find_by_key(key);
+			return result != underlying_type::end();
+		}
+
+		std::pair<iterator,bool> insert_unique(KeyType key, MappedType value)
+		{
+			if (!contains_key(key))
+			{
+				const iterator result = insert(value_type{std::move(key),std::move(value)});
+				return std::pair{result,true};
+			}
+			return std::pair{underlying_type::end(),false};
+		}
+
+		std::pair<iterator,bool> insert_or_assign(const KeyType& key, MappedType&& val)
+		{
+			const iterator find_result = find_by_key(key);
+			if (find_result != underlying_type::end())
+			{
+				find_result->second = std::forward<MappedType>(val);
+				return std::pair{find_result,false};
+			}
+			const auto [insert_result,success] = insert_unique(key,std::forward<MappedType>(val));
+			assert(success);
+			return std::pair{insert_result,true};
+		}
+
+		std::pair<iterator, bool> insert_or_assign(KeyType&& key, MappedType&& val)
+		{
+			const iterator find_result = find_by_key(key);
+			if (find_result != underlying_type::end())
+			{
+				find_result->second = std::forward<MappedType>(val);
+				return std::pair{ find_result,false };
+			}
+			const auto [insert_result, success] = insert_unique(std::forward<KeyType>(key), std::forward<MappedType>(val));
+			assert(success);
+			return std::pair{ insert_result,true };
+		}
+
+		MappedType& operator[](const KeyType& key)
+		{
+			iterator result = find_by_key(key);
+			if (result == underlying_type::end())
+			{
+				auto [insert_result,success] = insert_unique(key,MappedType{});
+				assert(success);
+				result = insert_result;
+			}
+			return result;
+		}
+
+		MappedType& operator[](KeyType&& key)
+		{
+			iterator result = find_by_key(key);
+			if (result == underlying_type::end())
+			{
+				auto [insert_result, success] = insert_unique(std::forward<KeyType>(key), MappedType{});
+				assert(success);
+				result = insert_result;
+			}
+			return result;
+		}
+
+		MappedType& at(const KeyType& key)
+		{
+			const iterator result = find_by_key(key);
+			if (result == underlying_type::end())
+			{
+				throw std::out_of_range{"Tried to access an element in a utils::flat_map that does not exist."};
+			}
+			return result->second;
+		}
+
+		const MappedType& at(const KeyType& key) const
+		{
+			const const_iterator result = find_by_key(key);
+			if (result == underlying_type::end())
+			{
+				throw std::out_of_range{ "Tried to access an element in a utils::flat_map that does not exist." };
+			}
+			return result->second;
+		}
+
+ 	private:
+ 		std::size_t lower_bound_index(const KeyType& key) const
+		{
+			if(underlying_type::empty()) return 0;
+			underlying_type::sort();
+			KeyCompare comp{};
+			const KeyType& first = underlying_type::front().first;
+			const bool key_is_less_than_first = comp(key,first);
+			if(key_is_less_than_first) return 0;
+			return lower_bound_index_impl(key,0,underlying_type::size());
+		}
+
+		std::size_t lower_bound_index_impl(const KeyType& key, std::size_t lower_idx, std::size_t upper_idx) const
+		{
+			assert(underlying_type::m_sorted);
+			assert(lower_idx <= upper_idx);
+
+			const std::size_t gap = upper_idx - lower_idx;
+			if (gap <= std::size_t{ 1 })
+			{
+				return upper_idx;
+			}
+
+			const std::size_t midpoint_idx = lower_idx + gap / 2;
+			KeyCompare comp{};
+			if (comp(key, underlying_type::m_data[midpoint_idx].first))
+			{
+				return lower_bound_index_impl(key,midpoint_idx,upper_idx);
+			}
+			else
+			{
+				return lower_bound_index_impl(key,lower_idx,midpoint_idx);
+			}
+		}
+	};
 }
 
 template <typename T, typename BinaryPred>
