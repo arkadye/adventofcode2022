@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <numeric>
 #include <limits>
+#include <array>
 
 #include "string_line_iterator.h"
 #include "to_value.h"
@@ -55,6 +56,7 @@ namespace
 	
 	using PayloadType = int;
 	using ElfPayload = std::string;
+	namespace stdr = std::ranges;
 
 	PayloadType get_elf_payload(const ElfPayload& payload)
 	{
@@ -78,17 +80,49 @@ namespace
 
 namespace
 {
-	constexpr std::size_t TOP_N = 3;
+	static constexpr std::size_t TOP_N = 3;
+	
+	struct TopPayloads
+	{
+		std::array<PayloadType,TOP_N> data;
+		TopPayloads()
+		{
+			std::ranges::fill(data,std::numeric_limits<PayloadType>::min());
+		}
+		void add_new_value(PayloadType new_value)
+		{
+			if (new_value > data.front())
+			{
+				data.front() = new_value;
+				std::ranges::sort(data);
+			}
+		}
+	};
+
+	TopPayloads merge_top_payloads(const TopPayloads& left, const TopPayloads& right)
+	{
+		TopPayloads result = left;
+		for (PayloadType payload : right.data)
+		{
+			result.add_new_value(payload);
+		}
+		return result;
+	}
+
 	PayloadType solve_p2(std::istream& input)
 	{
 		using IBI = utils::istream_block_iterator;
-		std::vector<PayloadType> payloads;
-		payloads.reserve(1000);
-		std::transform(IBI{input},IBI{},std::back_inserter(payloads),get_elf_payload);
+		const TopPayloads top_payloads = std::transform_reduce(IBI{input},IBI{},
+			TopPayloads{},
+			merge_top_payloads,
+			[](const ElfPayload& elf_payload)
+		{
+			TopPayloads result;
+			result.data.back() = get_elf_payload(elf_payload);
+			return result;
+		});
 
-		const auto middle_it = begin(payloads) + TOP_N;
-		std::nth_element(begin(payloads),middle_it,end(payloads),std::greater<PayloadType>{});
-		const PayloadType result = std::accumulate(begin(payloads),middle_it,PayloadType{0});
+		const PayloadType result = std::accumulate(begin(top_payloads.data),end(top_payloads.data),PayloadType{0});
 		return result;
 	}
 }
