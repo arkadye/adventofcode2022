@@ -28,6 +28,7 @@ namespace
 
 #include <numeric>
 #include <string_view>
+#include <array>
 
 namespace
 {
@@ -68,6 +69,19 @@ namespace
 		Draw		= 3,
 		RightWins	= 6
 	};
+
+	MatchResult to_intended_result(char c)
+	{
+		const utils::flat_map<char, MatchResult, std::less<char>, 3> lookup = []()
+		{
+			utils::flat_map<char, MatchResult, std::less<char>, 3> result;
+			result.insert_unique('X', MatchResult::LeftWins);
+			result.insert_unique('Y', MatchResult::Draw);
+			result.insert_unique('Z', MatchResult::RightWins);
+			return result;
+		}();
+		return lookup.at(c);
+	}
 
 	int get_result_score(MatchResult result)
 	{
@@ -113,7 +127,7 @@ namespace
 		return get_move_score(right) + get_result_score(match_result);
 	}
 
-	int get_score_from_chars(char left, char right)
+	int get_score_from_chars_p1(char left, char right)
 	{
 		AdventCheck(utils::range_contains_inc(left,'A','C'));
 		AdventCheck(utils::range_contains_inc(right,'X','Z'));
@@ -122,31 +136,66 @@ namespace
 		return get_rights_score(left_move,right_move);
 	}
 
-	int get_score_from_line(std::string_view line)
+	int get_score_from_line_p1(std::string_view line)
 	{
 		AdventCheck(line.size() == std::size_t{3});
 		AdventCheck(line[1] == ' ');
-		return get_score_from_chars(line[0],line[2]);
+		return get_score_from_chars_p1(line[0],line[2]);
 	}
 
-	int score_match(std::istream & input)
+	int score_match_p1(std::istream & input)
 	{
 		using ILI = utils::istream_line_iterator;
-		const int result = std::transform_reduce(ILI{input},ILI{},0,std::plus<int>{},get_score_from_line);
+		const int result = std::transform_reduce(ILI{input},ILI{},0,std::plus<int>{},get_score_from_line_p1);
 		return result;
 	}
 
 	int solve_p1(std::istream& input)
 	{
-		return score_match(input);
+		return score_match_p1(input);
 	}
 }
 
 namespace
 {
+	int get_score_from_chars_p2(char left, char right)
+	{
+		AdventCheck(utils::range_contains_inc(left, 'A', 'C'));
+		AdventCheck(utils::range_contains_inc(right, 'X', 'Z'));
+		const Move left_move = to_move(left);
+		const MatchResult intended_result = to_intended_result(right);
+		const MatchLookup match_lookup = get_match_lookup();
+		const Move right_move = [&result_lookup = match_lookup.at(left_move), intended_result]()
+		{
+			constexpr std::array<Move, 3> all_moves{ Move::Rock,Move::Paper,Move::Scissors };
+			const auto move_it = std::find_if(begin(all_moves), end(all_moves), [&result_lookup, intended_result](Move m)
+				{
+					const MatchResult result = result_lookup.get_result(m);
+					return result == intended_result;
+				});
+			AdventCheck(move_it != end(all_moves));
+			return *move_it;
+		}();
+		return get_rights_score(left_move, right_move);
+	}
+
+	int get_score_from_line_p2(std::string_view line)
+	{
+		AdventCheck(line.size() == std::size_t{ 3 });
+		AdventCheck(line[1] == ' ');
+		return get_score_from_chars_p2(line[0], line[2]);
+	}
+
+	int score_match_p2(std::istream& input)
+	{
+		using ILI = utils::istream_line_iterator;
+		const int result = std::transform_reduce(ILI{ input }, ILI{}, 0, std::plus<int>{}, get_score_from_line_p2);
+		return result;
+	}
+
 	int solve_p2(std::istream& input)
 	{
-		return 0;
+		return score_match_p2(input);
 	}
 }
 
@@ -162,6 +211,12 @@ ResultType day_two_p1_a()
 {
 	std::istringstream input = testcase_a();
 	return solve_p1(input);
+}
+
+ResultType day_two_p2_a()
+{
+	std::istringstream input = testcase_a();
+	return solve_p2(input);
 }
 
 ResultType advent_two_p1()

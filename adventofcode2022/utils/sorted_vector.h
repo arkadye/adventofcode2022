@@ -561,8 +561,8 @@ namespace utils
 			underlying_type::sort();
 			KeyCompare comp{};
 			const KeyType& first = underlying_type::front().first;
-			const bool key_is_less_than_first = comp(key,first);
-			if(key_is_less_than_first) return 0;
+			const bool first_is_less_than_key = comp(first,key);
+			if(!first_is_less_than_key) return 0;
 			return lower_bound_index_impl(key,0,underlying_type::size());
 		}
 
@@ -578,14 +578,19 @@ namespace utils
 			}
 
 			const std::size_t midpoint_idx = lower_idx + gap / 2;
+			const value_type& midpoint_value = underlying_type::m_data[midpoint_idx];
+			const KeyType& midpoint_key = midpoint_value.first;
+
 			KeyCompare comp{};
-			if (comp(key, underlying_type::m_data[midpoint_idx].first))
+			const bool mid_is_below_key = comp(midpoint_key, key);
+
+			if (!mid_is_below_key)
 			{
-				return lower_bound_index_impl(key,midpoint_idx,upper_idx);
+				return lower_bound_index_impl(key, lower_idx, midpoint_idx);
 			}
 			else
 			{
-				return lower_bound_index_impl(key,lower_idx,midpoint_idx);
+				return lower_bound_index_impl(key, midpoint_idx, upper_idx);
 			}
 		}
 	};
