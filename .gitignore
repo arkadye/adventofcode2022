@@ -55,3 +55,4 @@
 *.vsidx
 *.lock
 *.i
+*.json
