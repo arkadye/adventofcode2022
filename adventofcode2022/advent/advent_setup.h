@@ -2,7 +2,7 @@
 
 #include "advent_testcase_setup.h"
 
-static const std::string DEFAULT_FILTER = "";
+static const std::string DEFAULT_FILTER = "_five_";
 
 static const verification_test tests[] =
 {
@@ -18,7 +18,9 @@ static const verification_test tests[] =
 	TESTCASE(day_four_p1_a,2),
 	TESTCASE(day_four_p2_a,4),
 	DAY(four,471,888),
-	DAY(five,Dummy{},Dummy{}),
+	TESTCASE(day_five_p1_a,"CMZ"),
+	TESTCASE(day_five_p2_a,"MCD"),
+	DAY(five,"TPGVQPFDH",Dummy{}),
 	DAY(six,Dummy{},Dummy{}),
 	DAY(seven,Dummy{},Dummy{}),
 	DAY(eight,Dummy{},Dummy{}),

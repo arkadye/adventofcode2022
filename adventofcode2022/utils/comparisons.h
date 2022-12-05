@@ -108,25 +108,25 @@ namespace utils
 		template <typename RangeType, typename Transform>
 		[[nodiscard]] inline auto min_element_transform(RangeType&& range, const Transform& transform) noexcept
 		{
-			return min_element_transform(range.begin(),range.end(),transform);
+			return utils::min_element_transform(range.begin(),range.end(),transform);
 		}
 
 		template <typename RangeType, typename Transform>
 		[[nodiscard]] inline auto max_element_transform(RangeType&& range, const Transform& transform) noexcept
 		{
-			return max_element_transform(range.begin(), range.end(), transform);
+			return utils::max_element_transform(range.begin(), range.end(), transform);
 		}
 
 		template <typename RangeType, typename Transform>
 		[[nodiscard]] inline auto min_transform(RangeType&& range, const Transform& transform) noexcept
 		{
-			return min_transform(range.begin(), range.end(), transform);
+			return utils::min_transform(range.begin(), range.end(), transform);
 		}
 
 		template <typename RangeType, typename Transform>
 		[[nodiscard]] inline auto max_transform(RangeType&& range, const Transform& transform) noexcept
 		{
-			return max_transform(range.begin(), range.end(), transform);
+			return utils::max_transform(range.begin(), range.end(), transform);
 		}
 	}
 }
