@@ -20,7 +20,7 @@ static const verification_test tests[] =
 	DAY(four,471,888),
 	TESTCASE(day_five_p1_a,"CMZ"),
 	TESTCASE(day_five_p2_a,"MCD"),
-	DAY(five,"TPGVQPFDH",Dummy{}),
+	DAY(five,"TPGVQPFDH","DMRDFRHHH"),
 	DAY(six,Dummy{},Dummy{}),
 	DAY(seven,Dummy{},Dummy{}),
 	DAY(eight,Dummy{},Dummy{}),

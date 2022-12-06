@@ -393,9 +393,6 @@
     <Text Include="advent4\advent4.txt">
       <Filter>solutions\advent04</Filter>
     </Text>
-    <Text Include="advent5\advent5.txt">
-      <Filter>solutions\advent05</Filter>
-    </Text>
     <Text Include="advent6\advent6.txt">
       <Filter>solutions\advent06</Filter>
     </Text>
@@ -458,6 +455,9 @@
     </Text>
     <Text Include="advent19\testcase_a.txt">
       <Filter>solutions\advent19</Filter>
+    </Text>
+    <Text Include="advent5\advent5.txt">
+      <Filter>solutions\advent05</Filter>
     </Text>
   </ItemGroup>
 </Project>
