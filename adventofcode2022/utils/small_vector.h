@@ -436,7 +436,14 @@ namespace utils
 		constexpr void memset_buffer(Buffer memory, const T& value)
 		{
 			static_assert(can_fill_with_memset());
-			std::memset(memory.start, reinterpret_cast<int>(value), memory.size());
+			if constexpr (std::is_integral_v<T>)
+			{
+				std::memset(memory.start,static_cast<int>(value),memory.size());
+			}
+			else
+			{
+				std::memset(memory.start, reinterpret_cast<int>(value), memory.size());
+			}
 		}
 
 		template <typename Op>
