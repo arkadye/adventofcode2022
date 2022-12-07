@@ -131,14 +131,14 @@ namespace utils
 			reserve(target_capacity);
 		}
 
-		struct alignas(T) stack_buffer
+		struct alignas(T) stack_buffer_t
 		{
 			std::byte memory[sizeof(T) * stack_buffer_size()];
 		};
 
 		union data_access
 		{
-			stack_buffer stack_buffer;
+			stack_buffer_t stack_buffer;
 			T* heap_data;
 		};
 
@@ -381,7 +381,7 @@ namespace utils
 
 		constexpr GapDescription make_gap_for_insert(const_iterator pos, size_type gap_size)
 		{
-			assert(size > 0);
+			assert(size() > 0);
 			assert_iterator(pos);
 			const size_type distance_from_start = std::distance(cbegin(), pos);
 			const size_type distance_from_end = std::distance(pos, cend());

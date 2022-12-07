@@ -32,21 +32,23 @@ namespace
 
 namespace
 {
-	constexpr std::size_t window_size = 4;
-
-	
+	constexpr std::size_t window_size_p1 = 4;
+	constexpr std::size_t window_size_p2 = 14;
 
 	template <std::size_t WINDOW_SIZE>
 	int solve_generic(std::string_view input)
 	{
 		utils::ring_buffer<char, WINDOW_SIZE> seen_chars;
 		seen_chars.fill('\0');
-		std::size_t last_seen_cooldown = WINDOW_SIZE-1;
 		for (std::size_t i : utils::int_range{ input.size() })
 		{
 			const char c = input[i];
 			seen_chars.rotate(1);
 			seen_chars.back() = c;
+			if (std::find(cbegin(seen_chars), cend(seen_chars), '\0') != cend(seen_chars))
+			{
+				continue;
+			}
 			if (!utils::ranges::has_duplicates(seen_chars))
 			{
 				const int result = static_cast<int>(i) + 1;
@@ -59,7 +61,7 @@ namespace
 
 	int solve_p1(std::string_view input)
 	{
-		return solve_generic<window_size>(input);
+		return solve_generic<window_size_p1>(input);
 	}
 
 	int solve_p1(std::istream& input)
@@ -74,7 +76,7 @@ namespace
 {
 	int solve_p2(std::string_view input)
 	{
-		return 0;
+		return solve_generic<window_size_p2>(input);
 	}
 
 	int solve_p2(std::istream& input)
@@ -103,6 +105,12 @@ ResultType day_six_internal::day_six_p1_testcase(std::size_t input_idx)
 {
 	const std::string_view input = get_testcase_input(input_idx);
 	return solve_p1(input);
+}
+
+ResultType day_six_internal::day_six_p2_testcase(std::size_t input_idx)
+{
+	const std::string_view input = get_testcase_input(input_idx);
+	return solve_p2(input);
 }
 
 ResultType advent_six_p1()
