@@ -2,7 +2,7 @@
 
 #include "advent_testcase_setup.h"
 
-static const std::string DEFAULT_FILTER = "_six_";
+static const std::string DEFAULT_FILTER = "";
 
 static const verification_test tests[] =
 {
@@ -32,8 +32,12 @@ static const verification_test tests[] =
 	TESTCASE(day_six_p2_testcase<3>,29),
 	TESTCASE(day_six_p2_testcase<4>,26),
 	DAY(six,1623,3774),
-	DAY(seven,Dummy{},Dummy{}),
-	DAY(eight,Dummy{},Dummy{}),
+	TESTCASE(day_seven_p1_a,95437),
+	TESTCASE(day_seven_p2_a,24933642),
+	DAY(seven,1908462,3979145),
+	TESTCASE(day_eight_p1_a,21),
+	TESTCASE(day_eight_p2_a,8),
+	DAY(eight,1676,313200),
 	DAY(nine,Dummy{},Dummy{}),
 	DAY(ten,Dummy{},Dummy{}),
 	DAY(eleven,Dummy{},Dummy{}),
