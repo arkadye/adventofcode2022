@@ -4,6 +4,24 @@
 
 static const std::string DEFAULT_FILTER = "";
 
+static const std::string DAY_10_P2_B_RESULT =
+R"(
+##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....)";
+
+static const std::string ADVENT_10_RESULT =
+R"(
+###  #    #  # #    #  # ###  #### #  #
+#  # #    #  # #    # #  #  #    # #  #
+#  # #    #  # #    ##   ###    #  ####
+###  #    #  # #    # #  #  #  #   #  #
+#    #    #  # #    # #  #  # #    #  #
+#    ####  ##  #### #  # ###  #### #  #)"
+
 static const verification_test tests[] =
 {
 	TESTCASE(day_one_p1_a,24000),
@@ -38,8 +56,14 @@ static const verification_test tests[] =
 	TESTCASE(day_eight_p1_a,21),
 	TESTCASE(day_eight_p2_a,8),
 	DAY(eight,1676,313200),
-	DAY(nine,Dummy{},Dummy{}),
-	DAY(ten,Dummy{},Dummy{}),
+	TESTCASE(day_nine_p1_a,13),
+	TESTCASE(day_nine_p2_a,1),
+	TESTCASE(day_nine_p2_b,36),
+	DAY(nine,5619,2376),
+	TESTCASE(day_ten_p1_a, -1),
+	TESTCASE(day_ten_p1_b, 13140),
+	TESTCASE(day_ten_p2_b, DAY_10_P2_B_RESULT),
+	DAY(ten,14240,ADVENT_10_RESULT),
 	DAY(eleven,Dummy{},Dummy{}),
 	DAY(twelve,Dummy{},Dummy{}),
 	DAY(thirteen,Dummy{},Dummy{}),
