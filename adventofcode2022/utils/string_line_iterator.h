@@ -78,11 +78,12 @@ namespace utils
 	class string_line_range
 	{
 		std::string_view stream;
+		char delim = '\0';
 	public:
-		explicit string_line_range(std::string_view input) : stream{ input } {}
+		explicit string_line_range(std::string_view input, char sentinental = '\n') : stream{ input }, delim{ sentinental } {}
 		string_line_range(const string_line_range& other) = default;
 		string_line_range() = delete;
-		string_line_iterator begin() const { return string_line_iterator{ stream }; }
+		string_line_iterator begin() const { return string_line_iterator{ stream ,delim }; }
 		string_line_iterator end() const { return string_line_iterator{}; }
 	};
 }
