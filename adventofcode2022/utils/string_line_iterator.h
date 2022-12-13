@@ -5,7 +5,7 @@
 #include <optional>
 #include "split_string.h"
 
-#include <cassert>
+#include "../advent/advent_assert.h"
 
 namespace utils
 {
@@ -28,7 +28,7 @@ namespace utils
 				m_cached_split_result = utils::split_string_at_first(m_string,m_sentinental);
 			}
 
-			assert(m_cached_split_result.has_value());
+			AdventCheck(m_cached_split_result.has_value());
 			return m_cached_split_result.value();
 		}
 		bool is_at_end() const { return m_string.empty(); }
