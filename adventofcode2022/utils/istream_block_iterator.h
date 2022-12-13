@@ -82,7 +82,7 @@ namespace utils
 		std::istream& stream;
 	public:
 		explicit istream_block_range(std::istream& input) : stream{ input } {}
-		istream_block_range(const stream_block_range& other) = default;
+		istream_block_range(const istream_block_range& other) = default;
 		istream_block_range() = delete;
 		istream_block_iterator begin() const { return istream_block_iterator{ stream }; }
 		istream_block_iterator end() const { return istream_block_iterator{}; }
