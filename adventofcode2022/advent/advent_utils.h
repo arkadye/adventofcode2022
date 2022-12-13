@@ -4,6 +4,12 @@
 #include <sstream>
 #include <cassert>
 
+// Add some default headers that I always use every puzzle
+#include <algorithm>
+#include <numeric>
+#include <string>
+#include <string_view>
+
 #include "advent_assert.h"
 
 namespace advent
