@@ -79,6 +79,7 @@ static const verification_test tests[] =
 	TESTCASE(day_eleven_p2_a<10000>, 2713310158),
 	DAY(eleven,62491,17408399184),
 	DAY(twelve,Dummy{},Dummy{}),
+	TESTCASE(day_thirteen_p1_a,13),
 	DAY(thirteen,Dummy{},Dummy{}),
 	DAY(fourteen,Dummy{},Dummy{}),
 	DAY(fifteen,Dummy{},Dummy{}),
