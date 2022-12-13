@@ -3,11 +3,12 @@
 #include <cstddef>
 #include <memory>
 #include <iterator>
-#include <cassert>
 #include <stdexcept>
 #include <compare>
 #include <algorithm>
 #include <cstring>
+
+#include "../advent/advent_assert.h"
 
 namespace utils
 {

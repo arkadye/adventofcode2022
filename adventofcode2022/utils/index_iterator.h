@@ -2,9 +2,10 @@
 
 #include <iterator>
 #include <functional>
-#include <cassert>
 #include <type_traits>
 #include <compare>
+
+#include "../advent/advent_assert.h"
 
 namespace utils
 {
@@ -44,9 +45,9 @@ namespace utils
 		constexpr index_iterator(Container* c, difference_type p) noexcept : container{ c }, pos{ p }{}
 		constexpr reference get_from_real_index(difference_type index) const
 		{
-			assert(container != nullptr);
-			assert(index >= 0);
-			assert(static_cast<decltype(container->size())>(index) < container->size());
+			AdventCheck(container != nullptr);
+			AdventCheck(index >= 0);
+			AdventCheck(static_cast<decltype(container->size())>(index) < container->size());
 			return container->operator[](index);
 		}
 	public:

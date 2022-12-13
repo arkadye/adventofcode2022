@@ -3,7 +3,8 @@
 #include "small_vector.h"
 #include <algorithm>
 #include <functional>
-#include <cassert>
+
+#include "../advent/advent_assert.h"
 
 namespace utils
 {

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iterator>
-#include <cassert>
+
+#include "../advent/advent_assert.h"
 
 namespace utils
 {

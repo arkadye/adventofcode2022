@@ -2,7 +2,6 @@
 
 #include <map>
 #include <algorithm>
-#include <cassert>
 #include <vector>
 #include <iterator>
 #include <array>
@@ -10,6 +9,7 @@
 #include <shared_mutex>
 #include <mutex>
 
+#include "../advent/advent_assert.h"
 #include "sorted_vector.h"
 #include "range_contains.h"
 #include "erase_remove_if.h"
