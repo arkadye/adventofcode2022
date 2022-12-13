@@ -77,17 +77,17 @@ namespace utils
 		istream_block_iterator  operator++(int) noexcept { return *this; }
 	};
 
-	class stream_block_range
+	class istream_block_range
 	{
 		std::istream& stream;
 	public:
-		explicit stream_block_range(std::istream& input) : stream{ input } {}
-		stream_block_range(const stream_block_range& other) = default;
-		stream_block_range() = delete;
+		explicit istream_block_range(std::istream& input) : stream{ input } {}
+		istream_block_range(const stream_block_range& other) = default;
+		istream_block_range() = delete;
 		istream_block_iterator begin() const { return istream_block_iterator{ stream }; }
 		istream_block_iterator end() const { return istream_block_iterator{}; }
 	};
 }
 
-inline utils::istream_block_iterator begin(utils::stream_block_range lr) { return lr.begin(); }
-inline utils::istream_block_iterator end(utils::stream_block_range lr) { return lr.end(); }
+inline utils::istream_block_iterator begin(utils::istream_block_range lr) { return lr.begin(); }
+inline utils::istream_block_iterator end(utils::istream_block_range lr) { return lr.end(); }
