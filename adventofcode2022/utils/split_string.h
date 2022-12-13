@@ -15,7 +15,7 @@ namespace utils
 		}
 		else
 		{
-			return std::pair{ str,std::string{} };
+			return std::pair{ str,"" };
 		}
 	}
 
@@ -28,7 +28,7 @@ namespace utils
 		}
 		else
 		{
-			return std::pair{ str,std::string{} };
+			return std::pair{ str,"" };
 		}
 	}
 
@@ -46,7 +46,7 @@ namespace utils
 		}
 		else
 		{
-			return std::pair{ str,std::string{} };
+			return std::pair{ str,"" };
 		}
 	}
 
