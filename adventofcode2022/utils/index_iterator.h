@@ -72,7 +72,7 @@ namespace utils
 		// Comparisons
 		constexpr std::strong_ordering operator<=>(const index_iterator& other) const noexcept
 		{
-			assert(container == other.container);
+			AdventCheck(container == other.container);
 			return pos <=> other.pos;
 		}
 		// These aren't defined YET on my impementation

@@ -40,7 +40,7 @@ namespace utils
 
 		sorted_vector(std::initializer_list<T> ilist) : sorted_vector(ilist.begin(), ilist.end())
 		{
-			assert(m_data.size() == ilist.size());
+			AdventCheck(m_data.size() == ilist.size());
 		}
 
 		sorted_vector(const sorted_vector&) = default;
@@ -351,13 +351,13 @@ namespace utils
 
 		T& operator[](std::size_t index)
 		{
-			assert(index < m_data.size());
+			AdventCheck(index < m_data.size());
 			sort();
 			return m_data[index];
 		}
 		const T& operator[](std::size_t index) const
 		{
-			assert(index < m_data.size());
+			AdventCheck(index < m_data.size());
 			sort();
 			return m_data[index];
 		}
@@ -494,7 +494,7 @@ namespace utils
 				return std::pair{find_result,false};
 			}
 			const auto [insert_result,success] = insert_unique(key,std::forward<MappedType>(val));
-			assert(success);
+			AdventCheck(success);
 			return std::pair{insert_result,true};
 		}
 
@@ -507,7 +507,7 @@ namespace utils
 				return std::pair{ find_result,false };
 			}
 			const auto [insert_result, success] = insert_unique(std::forward<KeyType>(key), std::forward<MappedType>(val));
-			assert(success);
+			AdventCheck(success);
 			return std::pair{ insert_result,true };
 		}
 
@@ -517,7 +517,7 @@ namespace utils
 			if (result == underlying_type::end())
 			{
 				auto [insert_result,success] = insert_unique(key,MappedType{});
-				assert(success);
+				AdventCheck(success);
 				result = insert_result;
 			}
 			return result;
@@ -529,7 +529,7 @@ namespace utils
 			if (result == underlying_type::end())
 			{
 				auto [insert_result, success] = insert_unique(std::forward<KeyType>(key), MappedType{});
-				assert(success);
+				AdventCheck(success);
 				result = insert_result;
 			}
 			return result;
@@ -569,8 +569,8 @@ namespace utils
 
 		std::size_t lower_bound_index_impl(const KeyType& key, std::size_t lower_idx, std::size_t upper_idx) const
 		{
-			assert(underlying_type::m_sorted);
-			assert(lower_idx <= upper_idx);
+			AdventCheck(underlying_type::m_sorted);
+			AdventCheck(lower_idx <= upper_idx);
 
 			const std::size_t gap = upper_idx - lower_idx;
 			if (gap <= std::size_t{ 1 })

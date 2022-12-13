@@ -27,7 +27,7 @@ namespace utils
 
 		bool operator==(const const_index_iterator2& other) const
 		{
-			assert(container == other.container);
+			AdventCheck(container == other.container);
 			return pos == other.pos;
 		}
 
@@ -38,7 +38,7 @@ namespace utils
 
 		difference_type operator-(const const_index_iterator2& other) const
 		{
-			assert(container == other.container);
+			AdventCheck(container == other.container);
 			return static_cast<difference_type>(pos) - other.pos;
 		}
 

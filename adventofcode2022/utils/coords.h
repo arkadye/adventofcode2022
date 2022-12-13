@@ -2,10 +2,11 @@
 
 #include <compare>
 #include <numeric>
-#include <cassert>
 #include <cmath>
 #include <array>
 #include <iostream>
+
+#include "../advent/advent_assert.h"
 
 namespace utils
 {
@@ -89,7 +90,7 @@ namespace utils
 		template <typename RHSTYPE>
 		basic_coords& operator/=(RHSTYPE other) noexcept
 		{
-			assert(other != static_cast<RHSTYPE>(0));
+			AdventCheck(other != static_cast<RHSTYPE>(0));
 			x /= other;
 			y /= other;
 			return *this;
@@ -113,7 +114,7 @@ namespace utils
 			case direction::right:
 				return right();
 			default:
-				assert(false);
+				AdventCheck(false);
 				return basic_coords{};
 			}
 		}

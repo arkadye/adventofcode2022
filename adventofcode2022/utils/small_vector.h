@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cstring>
 
-#include "../advent/advent_assert.h"
+#include "../advent/advent_AdventCheck.h"
 
 namespace utils
 {
@@ -210,7 +210,7 @@ namespace utils
 		template <typename Op>
 		constexpr static void buffer_pair_operation(Buffer a_buf, Buffer b_buf, const Op& operation)
 		{
-			assert(a_buf.size() <= b_buf.size());
+			AdventCheck(a_buf.size() <= b_buf.size());
 			for (T* a = a_buf.start, *b = b_buf.start; a != a_buf.finish; ++a, ++b)
 			{
 				operation(a, b);
@@ -220,7 +220,7 @@ namespace utils
 		template <typename Op>
 		constexpr static void buffer_copy_op(InitialisedBuffer from, Buffer to, const Op& copy_op)
 		{
-			assert(from.size() <= to.size());
+			AdventCheck(from.size() <= to.size());
 			if constexpr (std::is_trivially_copyable_v<T>)
 			{
 				std::memmove(to.start, from.start, sizeof(T) * std::distance(from.start, from.finish));
@@ -254,7 +254,7 @@ namespace utils
 
 		constexpr static void move_buffer_to_raw_memory(InitialisedBuffer from, RawMemory to)
 		{
-			assert(from.size() <= to.size());
+			AdventCheck(from.size() <= to.size());
 			if constexpr (!can_use_move_internally())
 			{
 				copy_buffer_to_raw_memory(from,to);
@@ -267,7 +267,7 @@ namespace utils
 
 		constexpr static void move_buffer_to_initialised_memory(InitialisedBuffer from, InitialisedBuffer to)
 		{
-			assert(from.size() <= to.size());
+			AdventCheck(from.size() <= to.size());
 			if constexpr (!can_use_move_internally())
 			{
 				copy_buffer_to_initialised_memory(from,to);
@@ -293,7 +293,7 @@ namespace utils
 				{
 					return uninitialised_memory;
 				}
-				assert(initialised_memory.finish == uninitialised_memory.start);
+				AdventCheck(initialised_memory.finish == uninitialised_memory.start);
 				return Buffer{ initialised_memory.start,uninitialised_memory.finish };
 			}
 		};
@@ -328,7 +328,7 @@ namespace utils
 					}
 				}
 
-				assert(from.size() <= to.unitialised_memory.size());
+				AdventCheck(from.size() <= to.unitialised_memory.size());
 				if (!to.uninitialised_memory.empty())
 				{
 					move_buffer_to_raw_memory(from, to.uninitialised_memory);
@@ -366,7 +366,7 @@ namespace utils
 					}
 				}
 
-				assert(from.size() <= to.uninitialised_memory.size());
+				AdventCheck(from.size() <= to.uninitialised_memory.size());
 				if (!to.uninitialised_memory.empty())
 				{
 					copy_buffer_to_raw_memory(from, to.uninitialised_memory);
@@ -374,21 +374,21 @@ namespace utils
 			}
 		}
 
-		void assert_iterator(const_iterator it) noexcept
+		void check_iterator(const_iterator it) noexcept
 		{
-			assert(cbegin() <= it);
-			assert(it <= cend());
+			AdventCheck(cbegin() <= it);
+			AdventCheck(it <= cend());
 		}
 
 		constexpr GapDescription make_gap_for_insert(const_iterator pos, size_type gap_size)
 		{
-			assert(size() > 0);
-			assert_iterator(pos);
+			AdventCheck(size() > 0);
+			check_iterator(pos);
 			const size_type distance_from_start = std::distance(cbegin(), pos);
 			const size_type distance_from_end = std::distance(pos, cend());
 			grow(size() + gap_size);
 			pos = cbegin() + distance_from_start;
-			assert_iterator(pos);
+			check_iterator(pos);
 			if (distance_from_end == 0)
 			{
 				return GapDescription{ InitialisedBuffer{},RawMemory{end(),end() + gap_size} };
@@ -436,7 +436,7 @@ namespace utils
 
 		constexpr void memset_buffer(Buffer memory, const T& value)
 		{
-			static_assert(can_fill_with_memset());
+			static_AdventCheck(can_fill_with_memset());
 			if constexpr (std::is_integral_v<T>)
 			{
 				std::memset(memory.start,static_cast<int>(value),memory.size());
@@ -580,14 +580,14 @@ inline utils::small_vector<T, STACK_SIZE, ALLOC>::~small_vector()
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::reference utils::small_vector<T, STACK_SIZE, ALLOC>::operator[](size_type pos)
 {
-	assert(pos < size());
+	AdventCheck(pos < size());
 	return data()[pos];
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::const_reference utils::small_vector<T, STACK_SIZE, ALLOC>::operator[](size_type pos) const
 {
-	assert(pos < size());
+	AdventCheck(pos < size());
 	return data()[pos];
 }
 
@@ -694,7 +694,7 @@ inline constexpr utils::small_vector<T, STACK_SIZE, ALLOC>& utils::small_vector<
 		return *this;
 	}
 	
-	assert(capacity() >= other.size());
+	AdventCheck(capacity() >= other.size());
 	if constexpr (std::is_trivially_copy_assignable_v<T>)
 	{
 		std::memcpy(begin(), other.begin(), sizeof(T) * other.size());
@@ -731,7 +731,7 @@ template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator utils::small_vector<T, STACK_SIZE, ALLOC>::insert(const_iterator pos, T&& value)
 {
 	const GapDescription gap = make_gap_for_insert(pos, 1);
-	assert(gap.initialized_memory.empty() != gap.uninitialised_memory.size());
+	AdventCheck(gap.initialized_memory.empty() != gap.uninitialised_memory.size());
 	move_buffer_to_memory(Buffer{ &value,(&value) + 1 }, gap);
 	++m_num_elements;
 	return gap.initialised_memory.empty() ? gap.uninitialised_memory.finish : gap.initialised_memory.finish;
@@ -765,8 +765,8 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 		return end();
 	}
 	GapDescription gap = make_gap_for_insert(pos, 1);
-	assert(gap.initialised_memory.size() == 1);
-	assert(gap.uninitualised_memory.empty());
+	AdventCheck(gap.initialised_memory.size() == 1);
+	AdventCheck(gap.uninitualised_memory.empty());
 	*gap.initialised_memory.first = T(std::forward<Args>(args)...);
 	++m_num_elements;
 	return gap.initialised_memory.last;
@@ -781,7 +781,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 	{
 		const auto size_increase = std::distance(first, last);
 		GapDescription gap = make_gap_for_insert(pos, size_increase);
-		assert(gap.size() == size_increase);
+		AdventCheck(gap.size() == size_increase);
 		InputIt it = first;
 		for (T* init = gap.initialised_memory.start; init != gap.initialised_memory.finish; ++init)
 		{
@@ -826,7 +826,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 	}
 
 	const auto num_removed = std::distance(first, last);
-	assert(static_cast<std::size_t>(num_removed) <= size());
+	AdventCheck(static_cast<std::size_t>(num_removed) <= size());
 
 	const auto tail_length = static_cast<std::size_t>(std::distance(last, cend()));
 	
@@ -863,7 +863,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::pop_back()
 {
-	assert(!empty());
+	AdventCheck(!empty());
 	erase(cend() - 1);
 }
 
@@ -931,7 +931,7 @@ inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(InputIt 
 {
 	using ItCategory = typename std::iterator_traits<InputIt>::iterator_category;
 
-	static_assert(!std::is_same_v<ItCategory, std::output_iterator_tag>, "Cannot assign from an output iterator.");
+	static_AdventCheck(!std::is_same_v<ItCategory, std::output_iterator_tag>, "Cannot assign from an output iterator.");
 
 	const auto clear_tail = [this](std::size_t num_copied)
 	{
@@ -968,7 +968,7 @@ inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(InputIt 
 
 		clear_tail(num_copied);
 		
-		assert(size() == num_copied);
+		AdventCheck(size() == num_copied);
 		return;
 	}
 
@@ -1003,28 +1003,28 @@ inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(InputIt 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::reference utils::small_vector<T, STACK_SIZE, ALLOC>::front()
 {
-	assert(!empty());
+	AdventCheck(!empty());
 	return (*this)[0];
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::const_reference utils::small_vector<T, STACK_SIZE, ALLOC>::front() const
 {
-	assert(!empty());
+	AdventCheck(!empty());
 	return (*this)[0];
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::reference utils::small_vector<T, STACK_SIZE, ALLOC>::back()
 {
-	assert(!empty());
+	AdventCheck(!empty());
 	return (*this)[size() - 1];
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::const_reference utils::small_vector<T, STACK_SIZE, ALLOC>::back() const
 {
-	assert(!empty());
+	AdventCheck(!empty());
 	return (*this)[size() - 1];
 }
 
