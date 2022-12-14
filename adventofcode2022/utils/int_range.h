@@ -46,7 +46,7 @@ namespace utils
 		constexpr int_range() : int_range{ 0 } {}
 
 		constexpr INT operator[](std::size_t pos) const noexcept {
-			assert(pos < size());
+			AdventCheck(pos < size());
 			return min + (stride * static_cast<INT>(pos));
 		}
 

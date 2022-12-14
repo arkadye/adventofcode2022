@@ -125,7 +125,7 @@ namespace utils
 		}
 		constexpr difference_type operator-(index_iterator other) const noexcept
 		{
-			assert(container == other.container);
+			AdventCheck(container == other.container);
 			return static_cast<difference_type>(pos) - static_cast<difference_type>(other.pos);
 		}
 	};

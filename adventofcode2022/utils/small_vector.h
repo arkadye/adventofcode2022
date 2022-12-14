@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cstring>
 
-#include "../advent/advent_AdventCheck.h"
+#include "../advent/advent_assert.h"
 
 namespace utils
 {
@@ -436,7 +436,7 @@ namespace utils
 
 		constexpr void memset_buffer(Buffer memory, const T& value)
 		{
-			static_AdventCheck(can_fill_with_memset());
+			static_assert(can_fill_with_memset());
 			if constexpr (std::is_integral_v<T>)
 			{
 				std::memset(memory.start,static_cast<int>(value),memory.size());
@@ -931,7 +931,7 @@ inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(InputIt 
 {
 	using ItCategory = typename std::iterator_traits<InputIt>::iterator_category;
 
-	static_AdventCheck(!std::is_same_v<ItCategory, std::output_iterator_tag>, "Cannot assign from an output iterator.");
+	static_assert(!std::is_same_v<ItCategory, std::output_iterator_tag>, "Cannot assign from an output iterator.");
 
 	const auto clear_tail = [this](std::size_t num_copied)
 	{
