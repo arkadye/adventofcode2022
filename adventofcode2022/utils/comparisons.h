@@ -11,7 +11,9 @@ namespace utils
 		}
 		using ValType = decltype(*first);
 		FwdIt result = first;
-		for (FwdIt it = first; it != last; ++it)
+		FwdIt it = first;
+		std::advance(it, 1);
+		for (FwdIt it = first; it != last; std::advance(it,1))
 		{
 			if (transform(*it) < transform(*result))
 			{
@@ -30,7 +32,9 @@ namespace utils
 		}
 		using ValType = decltype(*first);
 		FwdIt result = first;
-		for (FwdIt it = first; it != last; std::advance(it,1))
+		FwdIt it = first;
+		std::advance(it, 1);
+		for (; it != last; std::advance(it,1))
 		{
 			if (transform(*it) > transform(*result))
 			{
@@ -38,6 +42,32 @@ namespace utils
 			}
 		}
 		return result;
+	}
+
+	template <typename FwdIt, typename Transform>
+	[[nodiscard]] inline std::pair<FwdIt,FwdIt> minmax_element_transform(FwdIt first, FwdIt last, const Transform& transform) noexcept
+	{
+		if (first == last)
+		{
+			return std::pair{ first,last };
+		}
+		using ValType = decltype(*first);
+		FwdIt min = first;
+		FwdIt max = first;
+		FwdIt it = first;
+		std::advance(it, 1);
+		for (FwdIt it = first; it != last; std::advance(it,1))
+		{
+			if (transform(*it) < transform(*min))
+			{
+				min = it;
+			}
+			else if (transform(*it) > transform(*max))
+			{
+				max = it;
+			}
+		}
+		return std::pair{ min,max };
 	}
 
 	template <typename FwdIt, typename Transform>
@@ -52,10 +82,17 @@ namespace utils
 		return *max_element_transform(first, last, transform);
 	}
 
+	template <typename FwdIt, typename Transform>
+	[[nodiscard]] inline auto minmax_transform(FwdIt first, FwdIt last, const Transform& transform) noexcept
+	{
+		const auto [min,max] = minmax_element_transform(first, last, transform);
+		return std::pair{ *min,*max };
+	}
+
 	template<typename T>
 	struct Larger
 	{
-		constexpr T operator()(const T& x, const T& y) const noexcept
+		[[nodiscard]] constexpr T operator()(const T& x, const T& y) const noexcept
 		{
 			return std::max<T>(x,y);
 		}
@@ -64,7 +101,7 @@ namespace utils
 	template<typename T>
 	struct Smaller
 	{
-		constexpr T operator()(const T& x, const T& y) const noexcept
+		[[nodiscard]] constexpr T operator()(const T& x, const T& y) const noexcept
 		{
 			return std::min<T>(x, y);
 		}
@@ -73,32 +110,32 @@ namespace utils
 	namespace utils_internal
 	{
 		template <typename BinaryOp, typename T>
-		T arg_folder(const BinaryOp& op, const T& first_arg, const T& second_arg)
+		[[nodiscard]] T arg_folder(const BinaryOp& op, const T& first_arg, const T& second_arg)
 		{
 			return op(first_arg,second_arg);
 		}
 
 		template <typename BinaryOp, typename T, typename...ExtraArgs>
-		T arg_folder(const BinaryOp& op, const T& first_arg, const T& second_arg, const T& third_arg, const ExtraArgs&...extra_args)
+		[[nodiscard]] T arg_folder(const BinaryOp& op, const T& first_arg, const T& second_arg, const T& third_arg, const ExtraArgs&...extra_args)
 		{
 			return op(first_arg,arg_folder(op,second_arg,third_arg,extra_args...));
 		}
 	}
 
 	template <typename...Args>
-	auto min(const Args&... args) noexcept
+	[[nodiscard]] auto min(const Args&... args) noexcept
 	{
 		static_assert(sizeof...(Args) >= 2,"utils::min must be called with at least two arguments");
 	}
 
 	template <typename T>
-	T max(const T& FirstArg, const T& SecondArg)
+	[[nodiscard]] T max(const T& FirstArg, const T& SecondArg)
 	{
 		return Larger{}(FirstArg, SecondArg);
 	}
 
 	template <typename T, typename...Args>
-	T max(const T& FirstArg, const T& SecondArg, const T& ThirdArg, const Args&... RestOfArgs)
+	[[nodiscard]] T max(const T& FirstArg, const T& SecondArg, const T& ThirdArg, const Args&... RestOfArgs)
 	{
 		return Larger{}(FirstArg, max(SecondArg, ThirdArg, RestOfArgs...));
 	}
@@ -118,6 +155,12 @@ namespace utils
 		}
 
 		template <typename RangeType, typename Transform>
+		[[nodiscard]] inline auto minmax_element_transform(RangeType&& range, const Transform& transform) noexcept
+		{
+			return utils::minmax_element_transform(range.begin(), range.end(), transform);
+		}
+
+		template <typename RangeType, typename Transform>
 		[[nodiscard]] inline auto min_transform(RangeType&& range, const Transform& transform) noexcept
 		{
 			return utils::min_transform(range.begin(), range.end(), transform);
@@ -127,6 +170,12 @@ namespace utils
 		[[nodiscard]] inline auto max_transform(RangeType&& range, const Transform& transform) noexcept
 		{
 			return utils::max_transform(range.begin(), range.end(), transform);
+		}
+
+		template <typename RangeType, typename Transform>
+		[[nodiscard]] inline auto minmax_transform(RangeType&& range, const Transform& transform) noexcept
+		{
+			return utils::minmax_transform(range.begin(), range.end(), transform);
 		}
 	}
 }
