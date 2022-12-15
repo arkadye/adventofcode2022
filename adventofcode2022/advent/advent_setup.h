@@ -15,12 +15,12 @@ R"(
 
 static const std::string ADVENT_10_RESULT =
 R"(
-###  #    #  # #    #  # ###  #### #  #
-#  # #    #  # #    # #  #  #    # #  #
-#  # #    #  # #    ##   ###    #  ####
-###  #    #  # #    # #  #  #  #   #  #
-#    #    #  # #    # #  #  # #    #  #
-#    ####  ##  #### #  # ###  #### #  #)";
+###  #    #  # #    #  # ###  #### #  # 
+#  # #    #  # #    # #  #  #    # #  # 
+#  # #    #  # #    ##   ###    #  #### 
+###  #    #  # #    # #  #  #  #   #  # 
+#    #    #  # #    # #  #  # #    #  # 
+#    ####  ##  #### #  # ###  #### #  # )";
 
 static const verification_test tests[] =
 {
@@ -82,7 +82,8 @@ static const verification_test tests[] =
 	TESTCASE(day_twelve_p2_a,29),
 	DAY(twelve,394,388),
 	TESTCASE(day_thirteen_p1_a,13),
-	DAY(thirteen,Dummy{},Dummy{}),
+	TESTCASE(day_thirteen_p2_a,140),
+	DAY(thirteen,5393,26712),
 	DAY(fourteen,Dummy{},Dummy{}),
 	DAY(fifteen,Dummy{},Dummy{}),
 	DAY(sixteen,Dummy{},Dummy{}),

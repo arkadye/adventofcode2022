@@ -1,7 +1,7 @@
 #include "advent13.h"
 #include "../advent/advent_utils.h"
 
-#define ENABLE_DAY13DBG 1
+#define ENABLE_DAY13DBG 0
 #ifdef NDEBUG
 #define DAY13DBG 0
 #else
@@ -27,6 +27,9 @@ namespace
 #include "split_string.h"
 #include "parse_utils.h"
 #include "to_value.h"
+#include "istream_line_iterator.h"
+#include "int_range.h"
+#include "transform_if.h"
 
 #include <variant>
 #include <optional>
@@ -57,6 +60,10 @@ namespace
 		}
 		explicit Packet_AsValue(Packet_Base other) : Packet_AsValue{other.data}{}
 		Packet_AsValue(const Packet_AsValue&) = default;
+		operator int() const
+		{
+			return utils::to_value<int>(data);
+		}
 	};
 
 	auto begin(Packet_AsValue packet) { return begin(packet.data); }
@@ -102,6 +109,8 @@ namespace
 		{
 			split();
 			base = after_data.value();
+			deref_bit.reset();
+			after_data.reset();
 			return *this;
 		}
 		Packet_AsList_Iterator operator++(int)
@@ -124,7 +133,7 @@ namespace
 		return Packet_Base{input};
 	}
 
-	struct ToPacket
+	struct PacketNormalizer
 	{
 		Packet operator()(Packet_Base base) const
 		{
@@ -150,9 +159,59 @@ namespace
 		}
 	};
 
+	struct PacketPrinter
+	{
+		std::ostream& stream;
+		explicit PacketPrinter(std::ostream& os) : stream{ os } {}
+		void operator()(Packet_Base packet)
+		{
+			stream << packet.data;
+		}
+		void operator()(Packet_AsValue packet)
+		{
+			stream << packet.data;
+		}
+		void operator()( Packet_AsList packet)
+		{
+			stream << '[' << packet.data << ']';
+		}
+	};
+
+	std::ostream& operator<<(std::ostream& oss, Packet packet)
+	{
+		std::visit(PacketPrinter{oss}, packet);
+		return oss;
+	}
+
+	void log_start_compare(Packet left, Packet right)
+	{
+		log << "Starting compare:\nLeft =" << left << "\nRight=" << right << '\n';
+	}
+
+	void log_end_compare(Packet left, Packet right, std::strong_ordering result)
+	{
+		auto order_str = [result]()
+		{
+			if (result == std::strong_ordering::equal || result == std::strong_ordering::equivalent)
+			{
+				return "==";
+			}
+			else if (result == std::strong_ordering::less)
+			{
+				return "<";
+			}
+			else if (result == std::strong_ordering::greater)
+			{
+				return ">";
+			}
+			return "ERR";
+		};
+		log << "Result:\nLeft =" << left << "\n " << order_str() << "\nRight=" << right << '\n';
+	}
+
 	Packet normalize(Packet packet)
 	{
-		return std::visit(ToPacket{},packet);
+		return std::visit(PacketNormalizer{},packet);
 	}
 
 	struct CompareThreeWay
@@ -186,9 +245,12 @@ namespace
 
 		std::strong_ordering normalize_and_compare(Packet left, Packet right) const
 		{
-			left = normalize(left);
-			right = normalize(right);
-			return std::visit(CompareThreeWay{},left,right);
+			log_start_compare(left, right);
+			const Packet left_arg = normalize(left);
+			const Packet right_arg = normalize(right);
+			const std::strong_ordering result = std::visit(CompareThreeWay{},left_arg,right_arg);
+			log_end_compare(left, right, result);
+			return result;
 		}
 
 		std::strong_ordering operator()(char left, char right) const
@@ -213,7 +275,9 @@ namespace
 		}
 		std::strong_ordering operator()(Packet_AsList left, Packet_AsList right) const
 		{
-			return generic_compare(left,right);
+			const std::strong_ordering result = generic_compare(left,right);
+			log_end_compare(left, right, result);
+			return result;
 		}
 		std::strong_ordering operator()(Packet_AsList left, Packet_AsValue right) const
 		{
@@ -231,7 +295,10 @@ namespace
 		}
 		std::strong_ordering operator()(Packet_AsValue left, Packet_AsValue right) const
 		{
-			return generic_compare(left.data,right.data);
+			const int l_val = left;
+			const int r_val = right;
+			const std::strong_ordering result = (l_val <=> r_val);
+			return result;
 		}
 	};
 
@@ -243,13 +310,21 @@ namespace
 
 	bool are_packets_in_order(std::string_view left, std::string_view right)
 	{
-		return are_packets_in_order(make_packet(left),make_packet(right));
+		const Packet left_packet = make_packet(left);
+		const Packet right_packet = make_packet(right);
+		const bool result = are_packets_in_order(left_packet,right_packet);
+		if (result)
+		{
+			log << "\nLeft = " << left << "\nRight= " << right << "\nIn order = " << (result ? "true" : "false") << '\n';
+		}
+		
+		return result;
 	}
 
 	bool are_packets_in_order(std::string_view line_pair)
 	{
 		AdventCheck(std::count(begin(line_pair),end(line_pair),'\n') == 1);
-		auto [left,right] = utils::split_string_at_first(line_pair,'\n');
+		const auto [left,right] = utils::split_string_at_first(line_pair,'\n');
 		return are_packets_in_order(left,right);
 	}
 
@@ -273,7 +348,37 @@ namespace
 {
 	int solve_p2(std::istream& input)
 	{
-		return 0;
+		using ILI = utils::istream_line_iterator;
+		const std::array<std::string, 2> dividers{ "[[2]]" , "[[6]]" };
+		utils::small_vector<std::string, 1> all_packets(begin(dividers),end(dividers));
+		utils::transform_if_pre(ILI{ input }, ILI{}, std::back_inserter(all_packets),
+			[](const std::string_view line)
+			{
+				return std::string{ line };
+			},
+			[](const std::string_view line)
+			{
+				return !line.empty(); 
+			});
+
+		std::ranges::sort(all_packets, [](std::string_view left, std::string_view right)
+			{
+				return are_packets_in_order(left, right);
+			});
+
+		const int result = std::transform_reduce(
+			begin(all_packets), end(all_packets),
+			utils::int_range<int>{1, INT_MAX}.begin(),
+			int{1},
+			std::multiplies<int>{},
+			[&dividers](std::string_view packet, int idx)
+			{
+				const auto find_result = std::find(begin(dividers), end(dividers), packet);
+				const bool is_divider = find_result != end(dividers);
+				log << "Divider packet '" << packet << "' found at idx " << idx << '\n';
+				return is_divider ? idx : 1;
+			});
+		return result;
 	}
 }
 
@@ -313,6 +418,12 @@ ResultType day_thirteen_p1_a()
 {
 	auto input = testcase_a();
 	return solve_p1(input);
+}
+
+ResultType day_thirteen_p2_a()
+{
+	auto input = testcase_a();
+	return solve_p2(input);
 }
 
 ResultType advent_thirteen_p1()
