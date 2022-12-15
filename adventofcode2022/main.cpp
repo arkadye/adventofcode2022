@@ -18,9 +18,5 @@ int main(int argc, char** argv)
 	{
 		verify_all();
 	}
-#ifndef WIN32
-	std::cout << "Program finished. Press any key to continue.";
-	std::cin.get();
-#endif
 	return 0;
 }
