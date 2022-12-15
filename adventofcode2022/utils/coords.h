@@ -7,6 +7,8 @@
 #include <iostream>
 
 #include "../advent/advent_assert.h"
+#include "split_string.h"
+#include "to_value.h"
 
 namespace utils
 {
@@ -145,6 +147,17 @@ namespace utils
 				*this + left() + up()
 			};
 		}
+
+		static basic_coords from_chars(std::string_view input)
+		{
+			basic_coords result;
+			auto [x, y] = utils::split_string_at_first(input, ',');
+			x = utils::trim_string(x);
+			y = utils::trim_string(y);
+			result.x = utils::to_value<T>(x);
+			result.y = utils::to_value<T>(y);
+			return result;
+		}
 	};
 
 	using coords = basic_coords<int>;
@@ -231,7 +244,16 @@ namespace utils
 	template <typename T>
 	inline std::ostream& operator<<(std::ostream& out, const basic_coords<T>& c)
 	{
-		out << "{ " << c.x << " , " << c.y << " }";
+		out << c.x << " , " << c.y;
 		return out;
+	}
+
+	template <typename T>
+	inline std::istream& operator>>(std::istream& in, basic_coords<T>& c)
+	{
+		char mid = '\0';
+		in >> c.x >> mid >> c.y;
+		AdventCheck(mid == ',');
+		return in;
 	}
 }
