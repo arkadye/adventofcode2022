@@ -191,7 +191,7 @@ namespace
 	template <AdventDay Day>
 	CrateWarehouse move_crates_around(CrateWarehouse initial_warehouse, std::istream& iss)
 	{
-		for (std::string line : utils::istream_line_range{ iss })
+		for (std::string_view line : utils::istream_line_range{ iss })
 		{
 			log << '\n' << "Initial warehouse state:\n" << initial_warehouse
 				<< "Processing: '" << line << "'\n";

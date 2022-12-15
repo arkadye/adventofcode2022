@@ -6,7 +6,7 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
-#include <cassert>
+#include <optional>
 
 namespace utils
 {
@@ -17,6 +17,47 @@ namespace utils
 		std::istream* m_stream;
 		std::string_view m_sentinental;
 		bool is_at_end() const { return m_stream == nullptr; }
+		std::optional<std::string> m_cached_result;
+		void read_next_block()
+		{
+			if (is_at_end())
+			{
+				throw std::range_error{ "Cannot deference an at-the-end stream block iterator" };
+			}
+
+			std::ostringstream result_stream;
+			std::string line;
+			while (true)
+			{
+				std::getline(*m_stream, line);
+				if (line == m_sentinental)
+				{
+					break;
+				}
+				result_stream << line << '\n';
+				if (m_stream->eof())
+				{
+					m_stream = nullptr;
+					break;
+				}
+			}
+
+			// Get the result and remove the trailing '\n'.
+			std::string result = result_stream.str();
+			if (!result.empty())
+			{
+				AdventCheck(result.back() == '\n');
+				result.pop_back();
+			}
+			m_cached_result = std::move(result);
+		}
+		void maybe_read_next_block()
+		{
+			if (!m_cached_result.has_value())
+			{
+				read_next_block();
+			}
+		}
 	public:
 		using pointer = const std::string*;
 		using reference = const std::string&;
@@ -39,42 +80,24 @@ namespace utils
 			return !(this->operator==(other));
 		}
 
-		std::string operator*()
+		std::string_view operator*()
 		{
-			if (is_at_end())
-			{
-				throw std::range_error{"Cannot deference an at-the-end stream block iterator"};
-			}
-
-			std::ostringstream result_stream;
-			while (true)
-			{
-				std::string line;
-				std::getline(*m_stream,line);
-				result_stream << line << '\n';
-				if (m_stream->eof() || line == m_sentinental)
-				{
-					break;
-				}
-			}
-
-			if (m_stream->eof())
-			{
-				m_stream = nullptr;
-			}
-
-			// Get the result and remove the trailing '\n'.
-			std::string result = result_stream.str();
-			if (!result.empty())
-			{
-				assert(result.back() == '\n');
-				result.pop_back();
-			}
-			return result;
+			maybe_read_next_block();
+			return m_cached_result.value();
 		}
 
-		istream_block_iterator& operator++() noexcept { return *this; }
-		istream_block_iterator  operator++(int) noexcept { return *this; }
+		istream_block_iterator& operator++() noexcept
+		{
+			maybe_read_next_block();
+			m_cached_result.reset();
+			return *this;
+		}
+		istream_block_iterator  operator++(int) noexcept
+		{	
+			istream_block_iterator result = *this;
+			++(*this);
+			return result;
+		}
 	};
 
 	class istream_block_range

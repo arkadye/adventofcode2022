@@ -126,9 +126,10 @@ namespace
 		return std::pair{ compartment_a,compartment_b };
 	}
 
-	int get_rucksack_priority(std::string line)
+	int get_rucksack_priority(std::string_view line)
 	{
-		auto [compartment_a, compartment_b] = get_compartments(line);
+		std::string rucksack{ line };
+		auto [compartment_a, compartment_b] = get_compartments(rucksack);
 		const Item matching_item = get_item_in_both(compartment_a, compartment_b);
 		const int priority = get_item_priority(matching_item);
 		return priority;

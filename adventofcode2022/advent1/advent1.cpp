@@ -55,7 +55,7 @@ namespace
 	}
 	
 	using PayloadType = int;
-	using ElfPayload = std::string;
+	using ElfPayload = std::string_view;
 	namespace stdr = std::ranges;
 
 	PayloadType get_elf_payload(const ElfPayload& payload)

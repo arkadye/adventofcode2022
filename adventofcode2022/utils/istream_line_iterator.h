@@ -4,6 +4,7 @@
 #include <string>
 #include <iterator>
 #include <stdexcept>
+#include <optional>
 
 namespace utils
 {
@@ -14,6 +15,29 @@ namespace utils
 		std::istream* m_stream;
 		char m_sentinental;
 		bool is_at_end() const { return m_stream == nullptr; }
+		std::optional<std::string> m_cached_result;
+		void read_next_sequence()
+		{
+			if (is_at_end())
+			{
+				throw std::range_error{ "Cannot dereference an at-the-end stream line iterator" };
+			}
+			std::string result;
+			std::getline(*m_stream, result, m_sentinental);
+			m_cached_result = std::move(result);
+
+			if (m_stream->eof())
+			{
+				m_stream = nullptr;
+			}
+		}
+		void maybe_read_next_sequence()
+		{
+			if (!m_cached_result.has_value())
+			{
+				read_next_sequence();
+			}
+		}
 	public:
 		using pointer = const std::string*;
 		using reference = const std::string&;
@@ -36,23 +60,24 @@ namespace utils
 			return !(this->operator==(other));
 		}
 
-		std::string operator*()
+		std::string_view operator*()
 		{
-			if (is_at_end())
-			{
-				throw std::range_error{"Cannot dereference an at-the-end stream line iterator"};
-			}
-			std::string result;
-			std::getline(*m_stream, result, m_sentinental);
-			if (m_stream->eof())
-			{
-				m_stream = nullptr;
-			}
-			return result;
+			maybe_read_next_sequence();
+			return m_cached_result.value();
 		}
 
-		istream_line_iterator& operator++() noexcept { return *this; }
-		istream_line_iterator  operator++(int) noexcept { return *this; }
+		istream_line_iterator& operator++() noexcept
+		{
+			maybe_read_next_sequence();
+			m_cached_result.reset();
+			return *this;
+		}
+		istream_line_iterator  operator++(int) noexcept
+		{
+			istream_line_iterator result = *this;
+			++(*this);
+			return result;
+		}
 	};
 
 	class istream_line_range

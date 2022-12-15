@@ -183,7 +183,7 @@ namespace
 		Directory* working_directory = nullptr;
 		bool expects_user_input = true;
 
-		for (const std::string& line : utils::istream_line_range{input})
+		for (const std::string_view line : utils::istream_line_range{input})
 		{
 			const Command command = read_as_command(line);
 
