@@ -1,6 +1,7 @@
 #pragma once
 
 #include "small_vector.h"
+#include "binary_find.h"
 #include <algorithm>
 #include <functional>
 
@@ -147,6 +148,24 @@ namespace utils
 		{
 			sort();
 			return find_if_no_sort(predicate);
+		}
+
+		// ThreeWayPredicate returns a std::weak_ordering.
+		// Return (iterator_value <=> reference_value).
+		template <typename ReferenceType, typename ThreeWayPredicate>
+		const_iterator binary_find_if(const ReferenceType& ref, const ThreeWayPredicate& predicate) const
+		{
+			sort();
+			return utils::ranges::binary_find_by_predicate(m_data, ref, predicate);
+		}
+
+		// ThreeWayPredicate returns a std::weak_ordering.
+		// Return (iterator_value <=> reference_value).
+		template <typename ReferenceType, typename ThreeWayPredicate>
+		iterator binary_find_if(const ReferenceType& ref, const ThreeWayPredicate& predicate)
+		{
+			sort();
+			return utils::ranges::binary_find_by_predicate(m_data, ref, predicate);
 		}
 
 		bool contains(const T& value) const
