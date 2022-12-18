@@ -53,7 +53,7 @@ namespace advent
 			std::string_view check_str,
 			const Args&...msg)
 		{
-			if (!check_passes)
+			if (!check_passes) [[unlikely]]
 			{
 				const auto file_break = file.find_last_of("\\/");
 				if (file_break < file.size())
