@@ -103,7 +103,7 @@ namespace utils
 			return std::upper_bound(m_data.begin(), m_data.end(), value, m_compare);
 		}
 
-		std::pair<const_iterator, const_iterator> equal_range(const T& value)
+		std::pair<const_iterator, const_iterator> equal_range(const T& value) const
 		{
 			sort();
 			return std::equal_range(m_data.begin(), m_data.end(), value, m_compare);
