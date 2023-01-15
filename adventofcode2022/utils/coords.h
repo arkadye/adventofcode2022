@@ -60,7 +60,7 @@ namespace utils
 		auto manhatten_distance() const noexcept { return std::abs(x) + std::abs(y); }
 		auto manhatten_distance(const basic_coords& other) const noexcept;
 		constexpr basic_coords(T x_, T y_) : x{ x_ }, y{ y_ }{}
-		constexpr basic_coords(T init) : basic_coords{ init,init } {}
+		constexpr explicit basic_coords(T init) : basic_coords{ init,init } {}
 		constexpr basic_coords() : basic_coords{ 0 } {}
 
 		basic_coords& operator=(const basic_coords&) noexcept = default;
