@@ -24,7 +24,9 @@ namespace utils
 		const auto split_point = str.find(delim);
 		if (split_point < str.size())
 		{
-			return std::pair{ str.substr(0,split_point),str.substr(split_point + delim.size()) };
+			const std::string_view left = str.substr(0, split_point);
+			const std::string_view right = str.substr(split_point + delim.size());
+			return std::pair{ left, right };
 		}
 		else
 		{
