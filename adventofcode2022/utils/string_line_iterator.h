@@ -14,7 +14,8 @@ namespace utils
 	{
 	private:
 		std::string_view m_string;
-		char m_sentinental;
+		std::string_view m_sentinental;
+		char m_sentinental_storage;
 		std::optional<std::pair<std::string_view,std::string_view>> m_cached_split_result;
 		std::pair<std::string_view, std::string_view> get_split_result()
 		{
@@ -39,8 +40,15 @@ namespace utils
 		using difference_type = int;
 		using iterator_category = std::forward_iterator_tag;
 		explicit string_line_iterator(std::string_view string, char sentinental = '\n') noexcept
-			: m_string{ string }, m_sentinental{ sentinental }{}
-		string_line_iterator() noexcept : m_string{ "" }, m_sentinental{ 0 }{}
+			: m_string{ string }, m_sentinental{ &m_sentinental_storage,1 }, m_sentinental_storage{ sentinental } {}
+		string_line_iterator(std::string_view string, std::string_view sentinental) noexcept
+			: m_string{ string }, m_sentinental{ sentinental }, m_sentinental_storage{ '\0' } {}
+		template <std::size_t input_size>
+		string_line_iterator(std::string_view string, const char sentintal[input_size])
+			: string_line_iterator{ string,std::string_view{sentintal,input_size} } {}
+		string_line_iterator(std::string_view string, const char* sentinental)
+			: string_line_iterator{ string,std::string_view{sentinental} } {}
+		string_line_iterator() noexcept : m_string{ "" }, m_sentinental{}, m_sentinental_storage{ '\0' } {}
 		string_line_iterator(const string_line_iterator&) noexcept = default;
 		string_line_iterator& operator=(const string_line_iterator&) noexcept = default;
 
@@ -78,9 +86,11 @@ namespace utils
 	class string_line_range
 	{
 		std::string_view stream;
-		char delim = '\0';
+		std::string_view delim;
+		char delim_storage = '\0';
 	public:
-		explicit string_line_range(std::string_view input, char sentinental = '\n') : stream{ input }, delim{ sentinental } {}
+		explicit string_line_range(std::string_view input, char sentinental = '\n') : stream{ input }, delim{ &delim_storage, 1 }, delim_storage{ sentinental } {}
+		string_line_range(std::string_view input, std::string_view sentinental) : stream{ input }, delim{ sentinental }, delim_storage{ '\0' } {}
 		string_line_range(const string_line_range& other) = default;
 		string_line_range() = delete;
 		string_line_iterator begin() const { return string_line_iterator{ stream ,delim }; }
