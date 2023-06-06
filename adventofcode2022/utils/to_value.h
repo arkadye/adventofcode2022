@@ -25,13 +25,13 @@ namespace utils
 	{
 		sv = trim_string(sv);
 		AdventCheckMsg(is_value(sv),"Could not convert string to value: " , sv);
-		if (!sv.empty() && sv.front() == '+')
-		{
-			sv.remove_prefix(1);
-		}
 		if (sv.empty())
 		{
 			return T{ 0 };
+		}
+		if (sv.front() == '+')
+		{
+			sv.remove_prefix(1);
 		}
 		
 		const char* first = sv.data();
