@@ -173,6 +173,15 @@ namespace utils
 			return find(value) != end();
 		}
 
+		std::size_t count(const T& value) const
+		{
+			sort();
+			const auto [lower_it, upper_it] = equal_range(value);
+			const auto diff = std::distance(lower_it, upper_it);
+			AdventCheck(diff >= decltype(diff){0});
+			return static_cast<std::size_t>(diff);
+		}
+
 		const T& front() const
 		{
 			sort();
