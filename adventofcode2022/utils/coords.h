@@ -141,18 +141,19 @@ namespace utils
 			}
 		}
 
-		// Return North, south, east, and west tiles.
+		// Return cardinal directions, starting from North and moving clockwise.
 		auto neighbours() const
 		{
 			return std::array<basic_coords, 4>
 			{
 				*this + up(),
 				*this + down(),
-				*this + left(),
-				*this + right()
+				*this + right(),
+				*this + left()
 			};
 		}
 
+		// Returns all eight compass points starting from North and moving clockwise.
 		auto neighbours_plus_diag() const
 		{
 			return std::array<basic_coords, 8>
