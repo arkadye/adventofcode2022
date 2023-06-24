@@ -113,7 +113,11 @@ static const verification_test tests[] =
 	TESTCASE(day_twentytwo_p1_a,6032),
 	TESTCASE(day_twentytwo_p2_a,5031),
 	DAY(twentytwo,76332,Dummy{}),
-	DAY(twentythree,Dummy{},Dummy{}),
+	TESTCASE(day_twentythree_p1_a, 25),
+	TESTCASE(day_twentythree_p1_b, 110),
+	TESTCASE(day_twentythree_p2_a, 4),
+	TESTCASE(day_twentythree_p2_b, 20),
+	DAY(twentythree,4208,1016),
 	DAY(twentyfour,Dummy{},Dummy{}),
 	DAY(twentyfive,Dummy{},"MERRY CHRISTMAS!")
 };
