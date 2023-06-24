@@ -21,6 +21,26 @@ namespace utils
 		left
 	};
 
+	inline constexpr bool is_horizontal(direction dir)
+	{
+		switch (dir)
+		{
+		case direction::right:
+		case direction::left:
+			return true;
+		case direction::up:
+		case direction::down:
+			return false;
+		}
+		AdventUnreachable();
+		return false;
+	}
+
+	inline constexpr bool is_vertical(direction dir)
+	{
+		return !is_horizontal(dir);
+	}
+
 	enum class turn_dir : char
 	{
 		clockwise,
@@ -245,6 +265,29 @@ namespace utils
 	inline std::ostream& operator<<(std::ostream& out, const basic_coords<T>& c)
 	{
 		out << c.x << " , " << c.y;
+		return out;
+	}
+
+	inline std::ostream& operator<<(std::ostream& out, direction dir)
+	{
+		switch (dir)
+		{
+		case direction::up:
+			out << "up";
+			break;
+		case direction::right:
+			out << "right";
+			break;
+		case direction::down:
+			out << "down";
+			break;
+		case direction::left:
+			out << "left";
+			break;
+		default:
+			AdventUnreachable();
+			break;
+		}
 		return out;
 	}
 
