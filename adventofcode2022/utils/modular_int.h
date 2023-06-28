@@ -14,6 +14,7 @@ namespace utils
 		eager
 	};
 
+	// Unwind val into range [min,max).
 	template <typename IntTypeA, typename IntTypeB, typename IntTypeC>
 	constexpr inline auto get_unwound(IntTypeA val, IntTypeB min, IntTypeC max)
 	{
