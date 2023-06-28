@@ -65,8 +65,8 @@ static const verification_test tests[] =
 	TESTCASE(day_ten_p2_b, DAY_10_P2_B_RESULT),
 	DAY(ten,14240,ADVENT_10_RESULT),
 	TESTCASE(day_eleven_p1_a,10605),
-	TESTCASE(day_eleven_p2_a<1>,4*6),
-	TESTCASE(day_eleven_p2_a<20>,103*99),
+	TESTCASE(day_eleven_p2_a<1>,4 * 6),
+	TESTCASE(day_eleven_p2_a<20>,103 * 99),
 	TESTCASE(day_eleven_p2_a<1000>, 5204 * 5192),
 	TESTCASE(day_eleven_p2_a<2000>, 10419 * 10391),
 	TESTCASE(day_eleven_p2_a<3000>, 15638 * 15593),
@@ -75,7 +75,7 @@ static const verification_test tests[] =
 	TESTCASE(day_eleven_p2_a<6000>, 31294 * 31204),
 	TESTCASE(day_eleven_p2_a<7000>, 36508 * 36400),
 	TESTCASE(day_eleven_p2_a<8000>, 41728 * 41606),
-	TESTCASE(day_eleven_p2_a<9000>, int64_t{46945} * int64_t{46807}),
+	TESTCASE(day_eleven_p2_a<9000>, int64_t{46945} *int64_t{46807}),
 	TESTCASE(day_eleven_p2_a<10000>, 2713310158),
 	DAY(eleven,62491,17408399184),
 	TESTCASE(day_twelve_p1_a,31),
@@ -118,7 +118,11 @@ static const verification_test tests[] =
 	TESTCASE(day_twentythree_p2_a, 4),
 	TESTCASE(day_twentythree_p2_b, 20),
 	DAY(twentythree,4208,1016),
-	DAY(twentyfour,Dummy{},Dummy{}),
+	TESTCASE(day_twentyfour_p1_a, 10),
+	TESTCASE(day_twentyfour_p1_b, 18),
+	TESTCASE(day_twentyfour_p2_a, 30),
+	TESTCASE(day_twentyfour_p2_b, 54),
+	DAY(twentyfour,249,735),
 	DAY(twentyfive,Dummy{},"MERRY CHRISTMAS!")
 };
 
