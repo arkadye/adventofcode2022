@@ -7,6 +7,9 @@
 #ifdef _MSC_VER
 #define InternalAdventPlatformSpecificHint(condition) __assume(condition)
 #define InternalAdventPlatformSpecificUnreachable __assume(false)
+#else
+#define InternalAdventPlatformSpecificHint(condition) do{}while(false)
+#define InternalAdventPlatformSpecificUnreachable do{int* x = nullptr; int y = *x; }while(false)
 #endif
 
 #define AdventCheck(test_bool) advent::check_advent_assert(__FILE__,__LINE__,test_bool,#test_bool)
